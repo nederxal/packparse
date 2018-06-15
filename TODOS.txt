@@ -1,0 +1,21 @@
+# pour chaque pack lister les fichier SM --> garder :
+#    le pack parent             --> le répertoire parsé
+#    le nom de la musique    --> ligne #TITLE ou #TITLETRANSLIT (plus complet si existant)
+#    vitesse                 --> ligne #DISPLAYBPM ou BPMS ou autre chose ... à voir ... on laisse de côté pour le moment.
+#    stepper                 -->
+#    difficultés    + nb de blocks    -->
+#    sachant que 1 diff = 1 stepper la plupart du temps 
+#    (banner a récup en bonux --> https://stackoverflow.com/questions/3715493/encoding-an-image-file-with-base64?utm_medium=organic&utm_source=google_rich_qa&utm_campaign=google_rich_qa)
+
+FAIT : 
+- Refonte de la base en 4 tables (pour des features futures)
+- refonte de la partie insertion db
+- ajout d'une partie pour NE PAS réinserer un pack déjà existants (et les songs avec)
+- prise en compte des fichiers UTF-8 / des lignes vides
+- amélioration pour la récupération du titre de la musique
+- meilleure prise en charge ouverture smfile (fait 2 fois actuellement)
+
+Axes d'amélioration :
+- créer le site pour exploiter les données
+- trouver comment extraire le plus efficacement possible le BPM
+- ajouter les banners pour le style ?

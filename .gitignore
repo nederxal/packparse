@@ -9,3 +9,7 @@
 *.pdf
 *.txt
 *.jpg
+*.rtf
+*.avi
+*.gif
+!TODOS.txt
