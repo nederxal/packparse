@@ -13,9 +13,10 @@ FAIT :
 - ajout d'une partie pour NE PAS réinserer un pack déjà existants (et les songs avec)
 - prise en compte des fichiers UTF-8 / des lignes vides
 - amélioration pour la récupération du titre de la musique
-- meilleure prise en charge ouverture smfile (fait 2 fois actuellement)
+- meilleure prise en charge ouverture smfile
+- ajouter les banners pour le style
 
 Axes d'amélioration :
-- créer le site pour exploiter les données
 - trouver comment extraire le plus efficacement possible le BPM
-- ajouter les banners pour le style ?
+- créer le site pour exploiter les données
+- Ajouter un logger pour relever les erreurs et les actions
