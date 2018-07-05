@@ -33,7 +33,6 @@ def main():
 def song_extract(db, pack):
 
     Song = namedtuple('Song',
-     'speed',
         ['name',
         'speed',
         'single',
