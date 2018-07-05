@@ -1,7 +1,7 @@
 # pour chaque pack lister les fichier SM --> garder :
 #    le pack parent             --> le répertoire parsé
 #    le nom de la musique    --> ligne #TITLE ou #TITLETRANSLIT (plus complet si existant)
-#    vitesse                 --> ligne #DISPLAYBPM ou BPMS ou autre chose ... à voir ... on laisse de côté pour le moment.
+#    vitesse                 --> ligne #DISPLAYBPM ou BPMS
 #    stepper                 -->
 #    difficultés    + nb de blocks    -->
 #    sachant que 1 diff = 1 stepper la plupart du temps 
@@ -16,7 +16,14 @@ FAIT :
 - meilleure prise en charge ouverture smfile
 - ajouter les banners pour le style
 
+
+
 Axes d'amélioration :
-- trouver comment extraire le plus efficacement possible le BPM
-- créer le site pour exploiter les données
+- trouver comment extraire le plus efficacement possible le BPM quand #DISPLAYBPM n'est pas utilisé
+    --> affichage bête comme sur SM / ITG valeur basse + valeur haute
 - Ajouter un logger pour relever les erreurs et les actions
+    --> trucs classique pour remonter ce qu'il se passe, à compléter avec les erreurs au fur età mesure des ajouts
+
+A faire : 
+- créer le site pour exploiter les données
+- Compteur de steps par difficulté ?

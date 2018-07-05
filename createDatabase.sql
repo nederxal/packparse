@@ -29,23 +29,23 @@ INSERT INTO difficulty (difficulty_name)
 VALUES ("Beginner"), ("Easy"), ("Medium"), ("Hard"), ("Challenge"), ("Edit")
 
 CREATE TABLE songs (
-    id                 INTEGER       PRIMARY KEY AUTOINCREMENT
-                                     UNIQUE,
-    fk_pack_name                     REFERENCES pack (id) ON DELETE CASCADE
-                                                          ON UPDATE CASCADE
-                                     NOT NULL,
-    song_name          VARCHAR (255) NOT NULL,
-    speed              INTEGER,
-    fk_stepper_name                  REFERENCES stepper (id) ON DELETE NO ACTION
-                                                             ON UPDATE CASCADE
-                                     NOT NULL,
-    single             BOOLEAN       NOT NULL
-                                     DEFAULT True,
-    fk_difficulty_name               NOT NULL
-                                     REFERENCES difficulty (id) ON DELETE SET NULL
-                                                                ON UPDATE CASCADE,
-    difficulty_block   INTEGER       NOT NULL,
-    fk_banner                        REFERENCES banner (id) 
+    id                 INTEGER PRIMARY KEY AUTOINCREMENT
+                               UNIQUE,
+    fk_pack_name               REFERENCES pack (id) ON DELETE CASCADE
+                                                    ON UPDATE CASCADE
+                               NOT NULL,
+    song_name          VARCHAR NOT NULL,
+    speed              VARCHAR,
+    fk_stepper_name            REFERENCES stepper (id) ON DELETE NO ACTION
+                                                       ON UPDATE CASCADE
+                               NOT NULL,
+    single             BOOLEAN NOT NULL
+                               DEFAULT True,
+    fk_difficulty_name         NOT NULL
+                               REFERENCES difficulty (id) ON DELETE SET NULL
+                                                          ON UPDATE CASCADE,
+    difficulty_block   INTEGER NOT NULL,
+    fk_banner                  REFERENCES banners (id) ON DELETE SET NULL
 );
 
 CREATE VIEW v_songs AS
