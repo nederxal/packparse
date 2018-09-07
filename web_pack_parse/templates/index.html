@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Welcom to PackParser</title>
+</head>
+
+<body>
+    <p>
+        Nous somme le {{ date }} et voici la liste des derniers packs de rentrés !
+    </p>
+    <table border=1>
+        <thead>
+            <td> Nom du pack</td>
+        </thead>
+        {% for row in rows %}
+            <tr>
+                <td>{{ row["pack_name"] }}</td>
+                <td>{{ row["song_name"] }}</td>
+            </tr>
+        {% endfor %}
+    </table>
+</body>
+
+</html> 

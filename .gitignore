@@ -13,3 +13,4 @@
 *.avi
 *.gif
 !TODOS.txt
+*.pyc

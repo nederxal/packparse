@@ -18,9 +18,9 @@ def main():
         ['name',
         'songs'])
     
-    db = db_open("songs.db")
+    db = db_open("../songs.db")
      
-    os.chdir("pack")
+    os.chdir("../pack")
     for pack_name in os.listdir("."):
         pack = Pack(pack_name,[])
         song_extract(db, pack)

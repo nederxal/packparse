@@ -34,8 +34,8 @@ CREATE TABLE songs (
     fk_pack_name               REFERENCES pack (id) ON DELETE CASCADE
                                                     ON UPDATE CASCADE
                                NOT NULL,
-    song_name          VARCHAR NOT NULL,
-    speed              VARCHAR,
+    song_name          VARCHAR (255) NOT NULL,
+    speed              VARCHAR (255),
     fk_stepper_name            REFERENCES stepper (id) ON DELETE NO ACTION
                                                        ON UPDATE CASCADE
                                NOT NULL,
