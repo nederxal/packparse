@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Welcome to PackParser</title>
+</head>
+
+<body>
+    <p>
+        {% if id %}
+            Voici la liste des songs dans {{ pack_name }}
+        {% else %}
+            Tu as demandé la liste des packs contenant {{ pack_name['pack_name'] }}
+        {% endif %}
+    </p>
+    <table border=1>
+        <thead>
+            <td> ¯\_(ツ)_/¯ </td>
+        </thead>
+        <!-- faire une double boucle pour 1. choper les musiques 2. choper en dessous ce qui lui correspond -->
+        {% if id %}
+            {% for row in rows %}
+            <tr>
+                <td> {{ row['song_name'] }} </td>
+                <td> {{ row['speed'] }} </td>
+                <td> {{ row['stepper_name'] }} </td>
+                <td> {{ row['difficulty_block'] }} </td>
+            </tr>
+            {% endfor %}
+        {% else %}
+            {% for row in rows %}
+            <tr>
+                <td><a href="/lfp/{{row['id']}}" > {{ row['pack_name'] }} </a></td>
+            </tr>
+            {% endfor %}
+        {% endif %}
+    </table>
+</body>
+
+</html> 

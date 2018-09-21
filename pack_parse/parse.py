@@ -70,6 +70,7 @@ def song_extract(db, pack):
                                             line,
                                             count=1).strip()
                         banner_path = re.sub(";", '', banner_path)
+                        # Refarie le stockage banner en flat avec un rename basé sur UUID 
                         try:
                             banner = open(os.path.join(dir_path,banner_path)
                                     , 'rb')
@@ -78,6 +79,7 @@ def song_extract(db, pack):
                             logging.warning("la banner pour %s n'existe pas on set à vide", sim_file)
                             banner_b64 = ''
                         fk_banner = db_get_fk(db, "banners", banner_b64)
+                        # Fin de la partie à refaire
                     if line.startswith("#DISPLAYBPM:"):
                         speed = re.sub("#DISPLAYBPM:", '', line).strip()
                         speed = re.sub("\.[0-9]*", "", speed)
