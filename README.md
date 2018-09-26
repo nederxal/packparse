@@ -6,7 +6,7 @@ pour chaque pack lister les fichier SM puis garder :
    - stepper                        --> dans les lignes avec un [tab]
    - difficultés + nb de blocks     --> dans les lignes avec un [tab]
         sachant que 1 diff = 1 stepper la plupart du temps 
-   - banner stockée en base64       --> https://stackoverflow.com/questions/3715493/encoding-an-image-file-with-base64?utm_medium=organic&utm_source=google_rich_qa&utm_campaign=google_rich_qa)
+   - banner stockée en flat dans un répertoire songs_banners
 
 
 Utilisation 
