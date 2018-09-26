@@ -1,58 +1,61 @@
 #!/usr/bin/python3
-#-*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
 import os
 import sys
 import re
 import sqlite3
-import base64
 import logging
+from shutil import copy
+from uuid import uuid4
 from datetime import datetime
 from collections import namedtuple
 
-logging.basicConfig(filename='parse.log',level=logging.WARNING)
+logging.basicConfig(filename='parse.log', level=logging.WARNING)
+
 
 def main():
-     
     Pack = namedtuple('Pack',
-        ['name',
-        'songs'])
-    
+                      ['name',
+                       'songs'])
+
     db = db_open("../songs.db")
-     
-    os.chdir("../pack")
-    for pack_name in os.listdir("."):
-        pack = Pack(pack_name,[])
+
+#    os.chdir("../pack")
+    for pack_name in os.listdir("../pack/"):
+        pack = Pack(pack_name, [])
         song_extract(db, pack)
-    
+
     db.close()
-    
+
     return 0
-    
-    
+
+
 def song_extract(db, pack):
 
     Song = namedtuple('Song',
-        ['name',
-        'speed',
-        'single',
-        'fk_stepper_name',
-        'fk_difficulty_name',
-        'difficulty_block',
-        'banner'])
-        
+                      ['name',
+                       'speed',
+                       'single',
+                       'fk_stepper_name',
+                       'fk_difficulty_name',
+                       'difficulty_block',
+                       'banner'])
+
     lines_tmp = []
-    
-    for dir_path, dir_name, files in os.walk(pack.name):
+
+    for dir_path, dir_name, files in os.walk("../pack/"+pack.name):
         for sim_file in files:
             if sim_file.endswith(".sm"):
                 speed = None
                 try:
-                    sim_file_tmp = open(os.path.join(dir_path,sim_file),
-                                    'r',
-                                    encoding='utf-8-sig')
+                    sim_file_tmp = open(os.path.join(dir_path, sim_file),
+                                        'r',
+                                        encoding='utf-8-sig')
                 except:
-                    logging.error("%s du pack %s pose problème",sim_file, pack.name)
+                    logging.error("%s du pack %s pose problème",
+                                  sim_file,
+                                  pack.name)
                     raise
 
                 for line in sim_file_tmp:
@@ -60,26 +63,19 @@ def song_extract(db, pack):
                         title = re.sub("#TITLE:", '', line, count=1).strip()
                     if line.startswith("#TITLETRANSLIT:"):
                         title_tmp = re.sub("#TITLETRANSLIT:",
-                                    '',
-                                    line, count=1).strip()
+                                           '',
+                                           line,
+                                           count=1).strip()
                         if len(title_tmp) > 1:
                             title = title_tmp
                     if line.startswith("#BANNER:"):
                         banner_path = re.sub("#BANNER:",
-                                            '',
-                                            line,
-                                            count=1).strip()
+                                             '',
+                                             line,
+                                             count=1).strip()
                         banner_path = re.sub(";", '', banner_path)
-                        # Refarie le stockage banner en flat avec un rename basé sur UUID 
-                        try:
-                            banner = open(os.path.join(dir_path,banner_path)
-                                    , 'rb')
-                            banner_b64 = base64.b64encode(banner.read())
-                        except FileNotFoundError as e:
-                            logging.warning("la banner pour %s n'existe pas on set à vide", sim_file)
-                            banner_b64 = ''
-                        fk_banner = db_get_fk(db, "banners", banner_b64)
-                        # Fin de la partie à refaire
+                        banner_path = os.path.join(dir_path, banner_path)
+                        fk_banner = get_banner_placement(db, banner_path)
                     if line.startswith("#DISPLAYBPM:"):
                         speed = re.sub("#DISPLAYBPM:", '', line).strip()
                         speed = re.sub("\.[0-9]*", "", speed)
@@ -91,10 +87,10 @@ def song_extract(db, pack):
                             and not re.search("//", line):
                         line = re.sub("[\[\]#;:\t]", '', line).strip()
                         lines_tmp.append(line)
-                
+
                 title = re.sub(";", '', title)
                 del lines_tmp[4::5]
-                
+
                 while lines_tmp:
                     if re.match('dance-single', lines_tmp[0]):
                         single_double = "True"
@@ -105,21 +101,23 @@ def song_extract(db, pack):
                         lines_tmp[0] = "UNAMED_STEPPER"
                     fk_stepper_name = db_get_fk(db, "stepper", lines_tmp[0])
                     del lines_tmp[0]
-                    fk_difficulty_name = db_get_fk(db, "difficulty", lines_tmp[0])
+                    fk_difficulty_name = db_get_fk(db,
+                                                   "difficulty",
+                                                   lines_tmp[0])
                     del lines_tmp[0]
                     difficulty_block = lines_tmp.pop(0)
                     s = Song(title,
-                        speed,
-                        single_double,
-                        fk_stepper_name,
-                        fk_difficulty_name,
-                        difficulty_block,
-                        fk_banner)
+                             speed,
+                             single_double,
+                             fk_stepper_name,
+                             fk_difficulty_name,
+                             difficulty_block,
+                             fk_banner)
                     pack.songs.append(s)
-    
+
     db_insert(db, pack)
-    
-    
+
+
 def get_speed(line):
     line = re.sub("#BPMS:", '', line).strip()
     line = line[:-1]
@@ -132,74 +130,100 @@ def get_speed(line):
     else:
         speed = max(t_line)
     return speed
-    
-    
+
+
+def get_banner_placement(db, banner_path):
+    if len(banner_path) > 0:
+        filename, ext = os.path.splitext(banner_path)
+        banner_dest = os.path.join(os.getcwd(),
+                                   "..",
+                                   "songs_banners",
+                                   str(uuid4())+ext)
+        try:
+            copy(banner_path, banner_dest)
+        except FileNotFoundError as e:
+            logging.warning("la banner %s n'est pas trouvable : %s",
+                            banner_path,
+                            e)
+            banner_dest = os.path.join(os.getcwd(),
+                                       "..",
+                                       "songs_banners",
+                                       "default_banner.jpg")
+
+    fk_banner = db_get_fk(db, "banners", banner_dest)
+
+    return fk_banner
+
+
 def db_open(path):
     conn = sqlite3.connect(path)
     return conn
-    
-    
+
+
 def db_get_fk(db, table, fk):
     c = db.cursor()
-    
+
     if table == 'stepper':
         try:
             c.execute('INSERT INTO stepper(stepper_name) VALUES (?)', (fk,))
         except sqlite3.IntegrityError as e:
-            logging.warning("Stepper potentiellement existant voir log")
-            logging.warning(e)
+            logging.warning("Stepper : %s  existant voir log %s",
+                            fk,
+                            e)
         db.commit()
         c.execute('SELECT id FROM stepper WHERE stepper_name = ?', (fk,))
     elif table == 'difficulty':
         c.execute('SELECT id FROM difficulty WHERE difficulty_name = ?', (fk,))
     elif table == 'banners':
         try:
-            c.execute('INSERT INTO banners(banner) VALUES (?)', (fk,))
+            c.execute('INSERT INTO banners(banner_path) VALUES (?)', (fk,))
         except sqlite3.IntegrityError as e:
-            logging.warning("Banner potentiellement existante, voir log")
-            logging.warning(e)
+            logging.warning("Banner %s potentiellement existante : %s",
+                            fk,
+                            e)
         db.commit()
-        c.execute('SELECT id FROM banners WHERE banner = ?', (fk,))
-        
+        c.execute('SELECT id FROM banners WHERE banner_path = ?', (fk,))
+
     value_fk = c.fetchone()
-    
+
     return value_fk[0]
-    
-    
+
+
 def db_insert(db, pack):
     c = db.cursor()
-    
+
     try:
-        c.execute("INSERT INTO pack(pack_name, entry_date) VALUES (?,?)", 
-                (pack.name, datetime.now().year))
+        c.execute("INSERT INTO pack(pack_name, entry_date) VALUES (?,?)",
+                  (pack.name, datetime.now().year))
         db.commit()
         c.execute('SELECT id FROM pack WHERE pack_name = ?', (pack.name,))
         fk_pack_name = c.fetchone()
-    
+
         for t in pack.songs:
             c.execute("INSERT INTO songs(fk_pack_name, \
-                                        song_name, \
-                                        speed, \
-                                        single, \
-                                        fk_stepper_name,\
-                                        fk_difficulty_name,\
-                                        difficulty_block,\
-                                        fk_banner)  \
-                                        VALUES (?,?,?,?,?,?,?,?)",
-                                        (fk_pack_name[0],
-                                        t.name,
-                                        t.speed,
-                                        t.single,
-                                        t.fk_stepper_name,
-                                        t.fk_difficulty_name,
-                                        t.difficulty_block,
-                                        t.banner))
+                                         song_name, \
+                                         speed, \
+                                         single, \
+                                         fk_stepper_name,\
+                                         fk_difficulty_name,\
+                                         difficulty_block,\
+                                         fk_banner)  \
+                                         VALUES (?,?,?,?,?,?,?,?)",
+                      (fk_pack_name[0],
+                       t.name,
+                       t.speed,
+                       t.single,
+                       t.fk_stepper_name,
+                       t.fk_difficulty_name,
+                       t.difficulty_block,
+                       t.banner))
         db.commit()
     except sqlite3.IntegrityError as e:
-        logging.warning("%s probablment déjà présent dans la base : %s",pack.name, e)
-    
-    
+        logging.warning("%s probablment déjà présent dans la base : %s",
+                        pack.name,
+                        e)
+
+
 if __name__ == '__main__':
     main()
     sys.exit(0)
-    
