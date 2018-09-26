@@ -2,6 +2,8 @@
 *.db
 !TODOS.txt
 !Instructions.txt
-pack/*/
-songs_banners/
+pack/*
+!pack/dummy
+songs_banners/*
+!songs_banners/default_banner.jpg
 pack_parse/parse.log
