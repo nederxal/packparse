@@ -7,7 +7,7 @@ import re
 import sqlite3
 import logging
 from shutil import copy
-from uuid import uuid4
+from hashlib import sha256
 from datetime import datetime
 from collections import namedtuple
 
@@ -74,7 +74,10 @@ def song_extract(db, pack):
                                              line,
                                              count=1).strip()
                         banner_path = re.sub(";", '', banner_path)
-                        banner_path = os.path.join(dir_path, banner_path)
+                        if len(banner_path) == 0:
+                            banner_path = os.path.join(dir_path, "banner.png")
+                        else:
+                            banner_path = os.path.join(dir_path, banner_path)
                         fk_banner = get_banner_placement(db, banner_path)
                     if line.startswith("#DISPLAYBPM:"):
                         speed = re.sub("#DISPLAYBPM:", '', line).strip()
@@ -125,33 +128,51 @@ def get_speed(line):
     line = re.sub("\.[0-9]*", "", line)
     t_line = line.split(",")
     t_line = list(map(int, t_line))
+
     if max(t_line) != min(t_line):
         speed = str(min(t_line))+":"+str(max(t_line))
     else:
         speed = max(t_line)
+
     return speed
 
 
 def get_banner_placement(db, banner_path):
     if len(banner_path) > 0:
-        filename, ext = os.path.splitext(banner_path)
-        banner_dest = os.path.join(os.getcwd(),
-                                   "..",
-                                   "songs_banners",
-                                   str(uuid4())+ext)
+        set_path = os.path.join(os.getcwd(),
+                                "..",
+                                "web_pack_parse",
+                                "static",
+                                "images")
+
         try:
+            filename, ext = os.path.splitext(banner_path)
+            banner_rename = sha256(open(banner_path,
+                                   'rb').read()).hexdigest()+ext
+            banner_dest = os.path.join(set_path, banner_rename)
             copy(banner_path, banner_dest)
+            fk_banner = db_get_fk(db, "banners", banner_rename)
         except FileNotFoundError as e:
-            logging.warning("la banner %s n'est pas trouvable : %s",
-                            banner_path,
-                            e)
-            banner_dest = os.path.join(os.getcwd(),
-                                       "..",
-                                       "songs_banners",
-                                       "default_banner.jpg")
-
-    fk_banner = db_get_fk(db, "banners", banner_dest)
-
+            # It happens sometime people set the banner with specific
+            # name in the SM file BUT they kept the name "banner.png" ...
+            try:
+                reg = '(/|\\\\)[\ a-zA-Z0-9_-]*.(png|jpg|jpeg)$'
+                banner_path = re.sub(reg, "/banner.png", banner_path)
+                banner_rename = sha256(open(banner_path, 
+                                       'rb').read()).hexdigest()+ext
+                banner_dest = os.path.join(set_path, banner_rename)
+                copy(banner_path, banner_dest)
+                fk_banner = db_get_fk(db, "banners", banner_rename)
+            except FileNotFoundError as e:
+                logging.warning("la banner %s n'est pas trouvable : %s",
+                                banner_path,
+                                e)
+                fk_banner = db_get_fk(db, "banners", "default_banner.jpg")
+        except SameFileError as e:
+            logging.info("La banner %s est déjà présente %s",
+                         banner_path,
+                         e)
+            fk_banner = db_get_fk(db, "banners", banner_rename)
     return fk_banner
 
 
@@ -185,7 +206,6 @@ def db_get_fk(db, table, fk):
         c.execute('SELECT id FROM banners WHERE banner_path = ?', (fk,))
 
     value_fk = c.fetchone()
-
     return value_fk[0]
 
 

@@ -1,6 +1,5 @@
 --FR
 1. Placer les packs dans Songs comme vous le feriez dans Stepmania5
-2. Ne pas toucher au dossier banners_songs (utilisé par Flask)
+
 --EN
 1. Place pack songs in the folder Songs like Stepmania5
-2. Don't touch the folder banners_songs, it's used by flask

@@ -13,13 +13,13 @@ def db_conn():
         db = g._database = sqlite3.connect(DATABASE)
         db.row_factory = sqlite3.Row
     return db
-    
+
 def db_query(query, args=(), one=False):
     cur = db_conn().execute(query, args)
     res = cur.fetchall()
     cur.close
     return (res[0] if res else None) if one else res
-    
+
 app = Flask(__name__)
 @app.teardown_appcontext
 def close_connection(exception):
@@ -27,8 +27,8 @@ def close_connection(exception):
     if db is not None:
         db.close()
 
-        
-        
+
+
 # VIEWS #
 @app.route('/')
 def index():
@@ -36,7 +36,7 @@ def index():
     d = d.strftime("%d-%m-%Y")
     rows = db_query("SELECT pack_name FROM pack LIMIT 5;")
     return render_template('index.html', date=d, rows=rows)
-    
+
 
 @app.route('/lfp/', methods=['POST'])
 def lfp():
@@ -48,8 +48,10 @@ def lfp():
 def lfpid(id):
     pack_name = db_query('SELECT pack_name FROM pack WHERE id = ? ', [id], one=True)
     print (pack_name[0])
-    rows = db_query('SELECT song_name, speed, stepper_name, difficulty_block from v_songs where id = ?', [id])
-    return render_template('parse_res.html', id=id, pack_name=pack_name[0], rows=rows)
+    #rows = db_query('SELECT song_name, speed, stepper_name, difficulty_block from v_songs where id = ?', [id])
+    rows = db_query('SELECT song_name, speed, banner_path from v_songs where id = ? GROUP BY song_name', [id])
+    rows2 = db_query('SELECT song_name, stepper_name, difficulty_block, difficulty_name from v_songs where id = ?', [id])
+    return render_template('parse_res.html', id=id, pack_name=pack_name[0], rows=rows, rows2=rows2)
 
 # @app.route('/lfs/')
 # def lfs():

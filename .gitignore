@@ -4,6 +4,7 @@
 !Instructions.txt
 pack/*
 !pack/dummy
-songs_banners/*
-!songs_banners/default_banner.jpg
+web_pack_parse/static/images/*
+!web_pack_parse/static/images/default_banner.jpg
+pack_parse/parse.log
 pack_parse/parse.log
