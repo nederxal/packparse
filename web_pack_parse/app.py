@@ -5,7 +5,7 @@ import sqlite3
 from flask import Flask, request, render_template,g
 from datetime import date, datetime
 
-# STUFF ... #
+# STUFF ...
 DATABASE = "../songs.db"
 def db_conn():
     db = getattr(g, '_database', None)
@@ -29,7 +29,7 @@ def close_connection(exception):
 
 
 
-# VIEWS #
+# VIEWS
 @app.route('/')
 def index():
     d = datetime.now()
@@ -47,8 +47,6 @@ def lfp():
 @app.route('/lfp/<id>')
 def lfpid(id):
     pack_name = db_query('SELECT pack_name FROM pack WHERE id = ? ', [id], one=True)
-    print (pack_name[0])
-    #rows = db_query('SELECT song_name, speed, stepper_name, difficulty_block from v_songs where id = ?', [id])
     rows = db_query('SELECT song_name, speed, banner_path from v_songs where id = ? GROUP BY song_name', [id])
     rows2 = db_query('SELECT song_name, stepper_name, difficulty_block, difficulty_name from v_songs where id = ?', [id])
     return render_template('parse_res.html', id=id, pack_name=pack_name[0], rows=rows, rows2=rows2)

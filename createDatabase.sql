@@ -15,9 +15,9 @@ CREATE TABLE stepper (
     desc_stepper TEXT
 );
 
-CREATE TABLE banner (
-    id     INTEGER PRIMARY KEY AUTOINCREMENT,
-    banner BLOB
+CREATE TABLE banners (
+    id          INTEGER       PRIMARY KEY AUTOINCREMENT,
+    banner_path VARCHAR (255) UNIQUE
 );
 
 CREATE TABLE difficulty (

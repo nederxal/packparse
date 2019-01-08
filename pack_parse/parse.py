@@ -52,7 +52,7 @@ def song_extract(db, pack):
                     sim_file_tmp = open(os.path.join(dir_path, sim_file),
                                         'r',
                                         encoding='utf-8-sig')
-                except:
+                except Exception:
                     logging.error("%s du pack %s pose problème",
                                   sim_file,
                                   pack.name)
@@ -158,7 +158,7 @@ def get_banner_placement(db, banner_path):
             try:
                 reg = '(/|\\\\)[\ a-zA-Z0-9_-]*.(png|jpg|jpeg)$'
                 banner_path = re.sub(reg, "/banner.png", banner_path)
-                banner_rename = sha256(open(banner_path, 
+                banner_rename = sha256(open(banner_path,
                                        'rb').read()).hexdigest()+ext
                 banner_dest = os.path.join(set_path, banner_rename)
                 copy(banner_path, banner_dest)
@@ -228,7 +228,7 @@ def db_insert(db, pack):
                                          fk_difficulty_name,\
                                          difficulty_block,\
                                          fk_banner)  \
-                                         VALUES (?,?,?,?,?,?,?,?)",
+                      VALUES (?,?,?,?,?,?,?,?)",
                       (fk_pack_name[0],
                        t.name,
                        t.speed,
