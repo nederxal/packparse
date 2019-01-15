@@ -1,5 +1,0 @@
---FR
-1. Placer les packs dans Songs comme vous le feriez dans Stepmania5
-
---EN
-1. Place pack songs in the folder Songs like Stepmania5
