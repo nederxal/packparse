@@ -1,10 +1,7 @@
 *.pyc
 *.db
-!TODOS.txt
-!Instructions.txt
 pack/*
 !pack/dummy
-web_pack_parse/static/images/*
-!web_pack_parse/static/images/default_banner.jpg
-pack_parse/parse.log
-pack_parse/parse.log
+/weblistor/weblistor/static/images/*
+!/weblistor/weblistor/static/images/default_banner.jpg
+weblistor.log

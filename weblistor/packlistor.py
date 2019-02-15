@@ -14,7 +14,7 @@ from weblistor.tables import Pack, Stepper, Banners, Difficulties, Songs
 
 
 def main():
-    logging.basicConfig(filename='weblistor.log', level=logging.INFO)
+    logging.basicConfig(filename='packlistor.log', level=logging.INFO)
     engine = create_engine('sqlite:///songs2.db')
     session = sessionmaker(bind=engine)
     db = session()
