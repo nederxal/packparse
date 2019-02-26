@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+    <title>Welcome to PackParser</title>
+        <meta charset="utf-8">
+        <link href="{{ url_for('static', filename='css/bootstrap.css') }}" rel="stylesheet">
+        <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+        <!-- JQuery-->
+        <script src="{{ url_for('static', filename='js/jquery.js') }}"></script>
+        <script src="{{ url_for('static', filename='js/bootstrap.js') }}"></script>
+    </head>
+    <body>
+        <div>
+            <!-- top banner -->
+        </div>
+        <div>
+            <form method="POST" action="">
+                {{ pack_form.csrf_token }}
+                <div>{{ pack_form.pack_name.label }} : {{ pack_form.pack_name() }}</div>
+                <button type="submit">Find da pack !</button>
+            </form>
+        </div>
+        <!-- les résultats -->
+        {% block container %} {% endblock %}
+        <!-- footer -->
+    </body>
+</html>
