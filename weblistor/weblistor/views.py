@@ -2,7 +2,7 @@
 # -*- coding:utf-8 -*-
 
 
-from flask import request, render_template,g
+from flask import request, render_template, redirect, url_for, session, g
 from datetime import datetime
 from weblistor import app
 from weblistor.tables import Pack, Stepper, Banners, Difficulties, Songs
@@ -20,16 +20,19 @@ def index():
     pack_form = SearchPack(request.form)
 
     if pack_form.validate_on_submit():
-        row = Pack.query.filter(Pack.name.like(pack_form.pack_name.data+"%")).order_by(Pack.name)
-        print (type(row))
-        return render_template('index.html', row=row, pack_form=pack_form)
+        return redirect(url_for('pack', name=pack_form.pack_name.data ))
 
     
     row = Pack.query.order_by(Pack.entry_date.desc()).limit(5)
     return render_template('index.html', row=row, pack_form=pack_form)
 
     
+@app.route('/pack/<name>', methods=['GET', 'POST'])
+def pack(name):
+    pack_form = SearchPack(request.form)
+    row = Pack.query.filter(Pack.name.like(name+"%")).order_by(Pack.name)
 
-    
+    if pack_form.validate_on_submit():
+        return redirect(url_for('pack', name=pack_form.pack_name.data ))
 
-
+    return render_template('pack.html', row=row, pack_form=pack_form)

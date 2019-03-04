@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+
+{% block container %}
+
+<div>
+    <p>Les packs proche ou loin de la demande</p>
+    <table border=1>
+        <thead>
+            <td> Pack Name </td>
+            <td> Entry date</td>
+        </thead>
+        {% for r in row %}
+            <tr>
+                <td>{{ r.name }}</td>
+                <td>{{ r.entry_date }}</td>
+            </tr>
+        {% endfor %}
+    </table>
+</div>
+
+{% endblock %}
