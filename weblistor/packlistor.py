@@ -104,8 +104,8 @@ def song_extract(db, pack):
                     difficulty_block = lines_tmp.pop(0)
 
                     song = Songs(title, speed, single, difficulty_block,
-                                fk_stepper_name, fk_difficulty_name,
-                                fk_banner)
+                                 fk_stepper_name, fk_difficulty_name,
+                                 fk_banner)
                     pack.songs.append(song)
 
     db_insert(db, pack)

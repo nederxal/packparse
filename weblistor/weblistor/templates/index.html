@@ -11,7 +11,7 @@
         </thead>
         {% for r in row %}
             <tr>
-                <td>{{ r.name }}</td>
+                <td><a href="{{ url_for('list_pack', id=r.id) }}">{{ r.name }}</a></td>
                 <td>{{ r.entry_date }}</td>
             </tr>
         {% endfor %}

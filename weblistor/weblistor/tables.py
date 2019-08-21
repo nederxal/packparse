@@ -3,6 +3,7 @@
 
 from datetime import datetime
 from weblistor import db
+from sqlalchemy.orm import relationship, session, aliased
 
 
 class Pack(db.Model):
@@ -44,7 +45,9 @@ class Difficulties(db.Model):
 
     def __init__(self, name):
         self.name = name
-    # Gérer l'auto populate ...
+# Gérer l'auto populate ...
+# INSERT INTO difficulties (name)
+# VALUES ("Beginner"), ("Easy"), ("Medium"), ("Hard"), ("Challenge"), ("Edit")
 
 
 class Songs(db.Model):
@@ -63,6 +66,12 @@ class Songs(db.Model):
     fk_banner = db.Column(db.Integer, db.ForeignKey("banners.id"),
                           nullable=False)
 
+    stepper_name = relationship("Stepper", foreign_keys=[fk_stepper_name])
+    pack_name = relationship("Pack", foreign_keys=[fk_pack_name])
+    difficulty_name = relationship("Difficulties",
+                                   foreign_keys=[fk_difficulty_name])
+    banner = relationship("Banners", foreign_keys=[fk_banner])
+
     def __init__(self, name, speed, single, difficulty_block,
                  fk_stepper_name, fk_difficulty_name, fk_banner):
         self.name = name
@@ -72,3 +81,23 @@ class Songs(db.Model):
         self.fk_stepper_name = fk_stepper_name
         self.fk_difficulty_name = fk_difficulty_name
         self.fk_banner = fk_banner
+
+    def get_songs_pack(id):
+        return (db.session.query(Songs.name, Songs.speed, Banners.name)
+                .filter(Songs.fk_pack_name == id)
+                .filter(Songs.fk_banner == Banners.id)
+                .group_by(Songs.name)
+                .order_by(Songs.name)
+                .all()
+                )
+
+    def get_songs_data(id):
+        return (db.session.query(Songs.name,
+                                 Stepper.name,
+                                 Songs.difficulty_block,
+                                 Difficulties.name)
+                .filter(Songs.fk_pack_name == id)
+                .filter(Songs.fk_difficulty_name == Difficulties.id)
+                .filter(Songs.fk_stepper_name == Stepper.id)
+                .all()
+                )
