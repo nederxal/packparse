@@ -5,11 +5,13 @@ import os
 import sys
 import re
 import logging
+import glob
 from shutil import copy, SameFileError
 from hashlib import sha256
 from datetime import datetime
 from sqlalchemy import create_engine, exc
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm.exc import NoResultFound
 from weblistor.tables import Pack, Stepper, Banners, Difficulties, Songs
 
 
@@ -19,9 +21,15 @@ def main():
     session = sessionmaker(bind=engine)
     db = session()
 
-    for pack_name in os.listdir("../pack/"):
-        pack = Pack(pack_name)
-        song_extract(db, pack)
+    for pack_name in os.scandir("../pack/"):
+        if pack_name.is_dir(follow_symlinks=False):
+            pack = Pack(pack_name.name)
+            try:
+                db.query(Pack).filter(Pack.name == pack.name).one()
+            except NoResultFound:
+                song_extract(db, pack)
+            else:
+                pass
 
     db.close()
 
@@ -30,83 +38,91 @@ def main():
 
 def song_extract(db, pack):
     lines_tmp = []
+    smpath = os.path.join("../pack", pack.name, "*/*.sm")
 
-    for dir_path, dir_name, files in os.walk("../pack/"+pack.name):
-        for sim_file in files:
-            if sim_file.endswith(".sm"):
-                speed = None
-                try:
-                    sim_file_tmp = open(os.path.join(dir_path, sim_file),
-                                        'r', encoding='utf-8-sig')
-                except Exception:
-                    logging.error("%s du pack %s pose problème",
-                                  sim_file,
-                                  pack.name)
-                    raise
+    for sim_file in glob.glob(smpath):
+        speed = None
+        try:
+            sim_file_tmp = open(sim_file, 'r', encoding='utf-8-sig')
+        except Exception:
+            logging.error("%s du pack %s pose problème", sim_file, pack.name)
+            raise
 
-                for line in sim_file_tmp:
-                    if line.startswith("#TITLE:"):
-                        title = re.sub("#TITLE:", '', line, count=1).strip()
+        for line in sim_file_tmp:
+            if re.match("[\ \r]*#TITLE:", line):
+                title = re.sub("#TITLE:", '', line, count=1).strip()
 
-                    if line.startswith("#TITLETRANSLIT:"):
-                        title_tmp = re.sub("#TITLETRANSLIT:", '', line,
-                                           count=1).strip()
+            if re.match("[\ \t]*#SUBTITLE:", line):
+                subt = re.sub("#SUBTITLE:", '', line, count=1).strip()
+                if len(subt) > 1:
+                    title = " ".join([title, subt])
 
-                        if len(title_tmp) > 1:
-                            title = title_tmp
+            if re.match("[\ \t]*#TITLETRANSLIT:", line):
+                title_tmp = re.sub("#TITLETRANSLIT:", '',
+                                   line, count=1).strip()
+                if len(title_tmp) > 1:
+                    title = title_tmp
 
-                    if line.startswith("#BANNER:"):
-                        banner_path = re.sub("#BANNER:", '', line,
-                                             count=1).strip()
-                        banner_path = re.sub(";", '', banner_path)
+            if re.match("[\ \t]*#BANNER:", line):
+                banner_path = re.sub("#BANNER:", '', line,
+                                     count=1).strip()
+                banner_path = re.sub(";", '', banner_path)
+                print(sim_file)
+                banner_path_base = os.path.dirname(sim_file)
 
-                        if len(banner_path) == 0:
-                            banner_path = os.path.join(dir_path, "banner.png")
-                        else:
-                            banner_path = os.path.join(dir_path, banner_path)
+                if len(banner_path) == 0:
+                    banner_path = os.path.join(banner_path_base, "banner.png")
+                else:
+                    banner_path = os.path.join(banner_path_base, banner_path)
 
-                        fk_banner = get_banner_placement(db, banner_path)
+                fk_banner = get_banner_placement(db, banner_path)
 
-                    if line.startswith("#DISPLAYBPM:"):
-                        speed = re.sub("#DISPLAYBPM:", '', line).strip()
-                        speed = re.sub(r"\.[0-9]*", "", speed)
-                        speed = speed[:-1]
+            if re.match("[\ \t]*#DISPLAYBPM:", line):
+                speed = re.sub("#DISPLAYBPM:", '', line).strip()
+                speed = re.sub(r"\.[0-9]*", "", speed)
+                speed = speed[:-1]
 
-                    if line.startswith("#BPMS") and not speed:
-                        speed = get_speed(line)
+            if re.match("[\ \t]*#BPMS", line) and not speed:
+                speed = get_speed(line)
 
-                    if re.match('[ \t]', line) \
-                            and re.search(":", line) \
-                            and not re.search("//", line):
-                        line = re.sub(r"[\[\]#;:\t]", '', line).strip()
-                        lines_tmp.append(line)
+            if re.match('^(\ |\t)+[^#]+\:', line):
+                line = re.sub(":", "", line)
+                line = re.sub(r"//.*", "", line).strip()
+                lines_tmp.append(line)
 
-                title = re.sub(";", '', title)
-                del lines_tmp[4::5]
+        title = re.sub(";", '', title)
+        del lines_tmp[4::5]
+        while lines_tmp:
+            if re.match('dance-single', lines_tmp[0]):
+                single = 1
+            elif (re.match('dance-couple', lines_tmp[0]) or
+                    re.match('dance-double', lines_tmp[0])):
+                single = 0
+            else:
+                # Lof of other stuff than dance-single/double/couple
+                # to avoid ...
+                del lines_tmp[0]
+                del lines_tmp[0]
+                del lines_tmp[0]
+                del lines_tmp[0]
+                continue
+            del lines_tmp[0]
 
-                while lines_tmp:
-                    if re.match('dance-single', lines_tmp[0]):
-                        single = 1
-                    else:
-                        single = 0
+            if len(lines_tmp[0]) == 0:
+                lines_tmp[0] = "UNAMED_STEPPER"
+            stepper = Stepper(lines_tmp[0])
+            fk_stepper_name = db_get_fk(db, stepper)
+            del lines_tmp[0]
 
-                    del lines_tmp[0]
-                    if len(lines_tmp[0]) == 0:
-                        lines_tmp[0] = "UNAMED_STEPPER"
-                    stepper = Stepper(lines_tmp[0])
-                    fk_stepper_name = db_get_fk(db, stepper)
+            difficulty = Difficulties(lines_tmp[0])
+            fk_difficulty_name = db_get_fk(db, difficulty)
+            del lines_tmp[0]
 
-                    del lines_tmp[0]
-                    difficulty = Difficulties(lines_tmp[0])
-                    fk_difficulty_name = db_get_fk(db, difficulty)
+            difficulty_block = lines_tmp.pop(0)
 
-                    del lines_tmp[0]
-                    difficulty_block = lines_tmp.pop(0)
-
-                    song = Songs(title, speed, single, difficulty_block,
-                                 fk_stepper_name, fk_difficulty_name,
-                                 fk_banner)
-                    pack.songs.append(song)
+            song = Songs(title, speed, single, difficulty_block,
+                         fk_stepper_name, fk_difficulty_name, fk_banner)
+            pack.songs.append(song)
 
     db_insert(db, pack)
 
@@ -155,7 +171,6 @@ def get_banner_placement(db, banner_path):
                             banner_path, e)
             banner = Banners("default_banner.png")
             fk_banner = db_get_fk(db, banner)
-
     except SameFileError as e:
         logging.info("La banner %s est déjà présente %s",
                      banner_path, e)
