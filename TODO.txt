@@ -1,0 +1,23 @@
+# Base
+Gérer le drop cascade quand on vire un pack	
+
+# Parseur
+	- Tenter une tentative desespérée pour récupérer le nom du stepper parfois dans le dossier
+BONUX:
+après upload recompresser le pack et le déplacer dans un endroit téléchargeable
+
+DONE : Gérer les cas de merde avec des tabs en trop .... -- Fait avec d'autres cas merdiques en plus ... 
+DONE : ajouter subtitle si il existe pour les cas de songs découpée (i.e : enjoy the flight)
+DONE : Remplacer startswith par re.match("^(\ \t)*#TOTO", line) un truc dans le genre
+DONE : Changer quand se fait la détection du pack dans la base pour éviter de parcourir un pack déjà paser
+DONE : (avec scandir et glob) Mieux gérer le parsing pour éviter de parser de la merde. se baser sur comment ça doit être mis dans Stepmania
+
+# Web
+Mieux gérer la recherche (pas uniquement startswith)
+Ajouter la recherche par songs (avec paramètre speed / stepartiste / diff block / diff name)
+Ranger les requètes de recherches avec les Objets de base (table.view) pour plus de cohérence
+Login avec upload
+CSS avec bootstrap :(
+
+Bonux:
+Une page de stats
