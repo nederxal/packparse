@@ -67,7 +67,6 @@ def song_extract(db, pack):
                 banner_path = re.sub("#BANNER:", '', line,
                                      count=1).strip()
                 banner_path = re.sub(";", '', banner_path)
-                print(sim_file)
                 banner_path_base = os.path.dirname(sim_file)
 
                 if len(banner_path) == 0:
@@ -124,7 +123,10 @@ def song_extract(db, pack):
                          fk_stepper_name, fk_difficulty_name, fk_banner)
             pack.songs.append(song)
 
-    db_insert(db, pack)
+    if len(pack.songs) == 0:
+        logging.warning("Le pack %s semble ne pas avoir de songs", pack.name)
+    else:
+        db_insert(db, pack)
 
 
 def get_speed(line):
