@@ -4,7 +4,7 @@
 
 from flask import request, render_template, redirect, url_for, session, g
 from datetime import datetime
-from weblistor import app, db
+from weblistor import app  # , db
 from weblistor.tables import Pack, Stepper, Banners, Difficulties, Songs
 from weblistor.forms import SearchPack
 from sqlalchemy.orm import sessionmaker, session
