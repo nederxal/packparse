@@ -1,7 +1,7 @@
 *.pyc
 *.db*
-pack/*
-!pack/.gitkeep
+weblistor/pack/*
+!weblistor/pack/.gitkeep
 /weblistor/weblistor/static/images/*
 !/weblistor/weblistor/static/images/default_banner.jpg
 weblistor.log
