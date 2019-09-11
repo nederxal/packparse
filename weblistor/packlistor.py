@@ -6,11 +6,12 @@ import sys
 import glob
 import logging
 from lark import Lark
+from lark.exceptions import UnexpectedCharacters
 from sqlalchemy import create_engine, exc
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm.exc import NoResultFound
 from weblistor.tables import Pack, Stepper, Banners, Difficulties, Songs
-from weblistor.tables import SimFile
+from weblistor.simfile import SimFile
 
 
 def main():
@@ -35,16 +36,20 @@ def main():
 
 def song_extract(db, pack):
     lines_tmp = []
-    smpath = os.path.join("../pack", pack.name, "*/*.sm")
+    smpath = os.path.join("pack", pack.name, "*/*.sm")
     lark_parser = Lark(open('simfile.lark', 'r').read(), parser="lalr")
 
     for simfile_path in glob.glob(smpath):
         try:
-            logging.info("Parse : %s", simfile_path)
+            logging.debug("Parse : %s", simfile_path)
             simfile = open(simfile_path, 'r', encoding='utf-8-sig').read()
             simfile_tree = lark_parser.parse(simfile)
             SimFileResult = SimFile(simfile_path, pack, db)
             SimFileResult.visit(simfile_tree)
+        except UnexpectedCharacters as e:
+            logging.error("%s du pack %s a une règle inconnue :\n %s",
+                          simfile_path, pack.name, e)
+            raise
         except Exception as e:
             logging.error("%s du pack %s pose problème",
                           simfile_path, pack.name)
