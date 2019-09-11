@@ -4,10 +4,10 @@
 
 from flask import request, render_template, redirect, url_for, session, g
 from datetime import datetime
-from weblistor import app  # , db
+from sqlalchemy.orm import sessionmaker, session
+from weblistor import app
 from weblistor.tables import Pack, Stepper, Banners, Difficulties, Songs
 from weblistor.forms import SearchPack
-from sqlalchemy.orm import sessionmaker, session
 
 # Ajouter le fomrulaire pour la recherche de pack et voir comment intégrer ça
 # dans une requète ou un stepper pour trouver quelles songs lui sont associées

@@ -30,4 +30,4 @@ single_notes: single_measure* single_final_measure
 single_chart: "#NOTES:" "dance-single:" (CHART_VALUE* ":")~4 single_notes*
 
 // Ignore everithing that is note dance-single
-ignore_chart: "#NOTES:" SOME_SHIT (CHART_VALUE* ":")~4 /[012345678MF,]/* ";"
+ignore_chart: "#NOTES:" SOME_SHIT (CHART_VALUE* ":")~4 /[01234MF,]/* ";"
