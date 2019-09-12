@@ -2,6 +2,7 @@
 WTFPL ? tant que y'a pas de pognon fait dessus ...
 
 # Base
+- Index ?
 
 DONE : Gérer le drop cascade quand on vire un pack |on ne gère que la suppressions de songs, les steppers et banners peuvent être réutilisés
 
@@ -9,9 +10,7 @@ DONE : Gérer le drop cascade quand on vire un pack |on ne gère que la suppress
 
 # Parseur
 
-- Calculer le breakdown
-
-ROLLING : Revoir le logging pour faire ça proprement et remonter les merdes (en fait c'est ok mais ça reste un travail sur le niveau de débug)
+-Revoir le logging pour faire ça proprement et remonter les merdes (en fait c'est ok mais ça reste un travail sur le niveau de débug)
 
 BONUX:
 après upload recompresser le pack et le déplacer dans un endroit téléchargeable
@@ -24,7 +23,7 @@ DONE : Checker les packs vides !
 DONE : (avec scandir et glob) Mieux gérer le parsing pour éviter de parser de la merde. se baser sur comment ça doit être mis dans Stepmania
 DONE : Tenter une tentative desespérée pour récupérer le nom du stepper parfois dans le dossier + nettoyage BD
 DONE : Détecter les stepcharts sans steps et ne pas les inclures
-
+DONE : Calculer le breakdown (façon arrow vortex)
 -----
 
 # Web

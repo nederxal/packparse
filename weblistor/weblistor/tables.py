@@ -54,6 +54,7 @@ class Songs(db.Model):
     speed = db.Column(db.String(255), nullable=False)
     single = db.Column(db.Boolean, nullable=False)
     difficulty_block = db.Column(db.Integer, nullable=False)
+    breakdown = db.Column(db.String(255), nullable=True)
     fk_stepper_name = db.Column(db.Integer, db.ForeignKey("stepper.id"))
     fk_pack_name = db.Column(db.Integer, db.ForeignKey("pack.id",
                                                        ondelete="cascade"))
@@ -61,12 +62,13 @@ class Songs(db.Model):
                                    db.ForeignKey("difficulties.id"))
     fk_banner = db.Column(db.Integer, db.ForeignKey("banners.id"))
 
-    def __init__(self, name, speed, single, difficulty_block,
+    def __init__(self, name, speed, single, difficulty_block, breakdown,
                  fk_stepper_name, fk_difficulty_name, fk_banner):
         self.name = name
         self.speed = speed
         self.single = single
         self.difficulty_block = difficulty_block
+        self.breakdown = breakdown
         self.fk_stepper_name = fk_stepper_name
         self.fk_difficulty_name = fk_difficulty_name
         self.fk_banner = fk_banner

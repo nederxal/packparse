@@ -13,6 +13,8 @@ from sqlalchemy.orm.exc import NoResultFound
 from weblistor.tables import Pack, Stepper, Banners, Difficulties, Songs
 from weblistor.simfile import SimFile
 
+logging.basicConfig(filename='packlistor.log', level=logging.INFO)
+
 
 def main():
     engine = create_engine('sqlite:///songs2.db')
@@ -79,6 +81,5 @@ def db_insert(db, pack):
 
 
 if __name__ == '__main__':
-    logging.basicConfig(filename='packlistor.log', level=logging.INFO)
     main()
     sys.exit(0)
