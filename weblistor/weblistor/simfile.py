@@ -59,8 +59,58 @@ class SimFile(Visitor):
         # Maybe stepchart is empty ... we won't add it
         # Empty chart count at least 1 measure
         chart_len = tree.children[-1]
-        self.db_get_fk(difficulty_name)
-        self.single = True
+
+        pause = 0
+        stream = 0
+        final_bd = []
+
+        for m in chart_len.children:
+            if len(m.children) <= 8:
+                if stream >= 1:
+                    final_bd.append(stream)
+                    stream = 0
+                    pause += 1
+                else:
+                    pause += 1
+            else:
+                s = 0
+                for steps in m.children:
+                    if any(x in steps.children[0] for x in ["1", "2", "4"]):
+                        s += 1
+
+                if s == len(m.children):
+                    if pause == 1:
+                        final_bd.append("'")
+                        pause = 0
+                        stream += 1
+                    elif pause in range(2, 4):
+                        final_bd.append("-")
+                        pause = 0
+                        stream += 1
+                    elif pause in range(5, 16):
+                        final_bd.append('/')
+                        pause = 0
+                        stream += 1
+                    elif pause > 16:
+                        final_bd.append('|')
+                        pause = 0
+                        stream += 1
+                    else:
+                        stream += 1
+                else:
+                    if stream > 0:
+                        final_bd.append(stream)
+                    stream = 0
+                    pause += 1
+
+        if stream > 0:
+            final_bd.append(stream)
+        try:
+            if not str(final_bd[0]).isdigit():
+                final_bd.pop(0)
+        except IndexError:
+            pass
+        self.breakdown = ''.join(map(str, final_bd))
 
         if len(chart_len.children) <= 1:
             pass
@@ -78,9 +128,12 @@ class SimFile(Visitor):
                 print("ERROR sur les data après NOTES")
                 sys.exit(1)
 
+            self.db_get_fk(difficulty_name)
+            self.single = True
             song = Songs(self.name, self.speed, self.single,
-                         self.difficulty_block, self.fk_stepper_name.id,
-                         self.fk_difficulty_name.id, self.fk_banner.id)
+                         self.difficulty_block, self.breakdown,
+                         self.fk_stepper_name.id, self.fk_difficulty_name.id,
+                         self.fk_banner.id)
             self.add_to_pack(song)
 
     # Operations on data to get something clean ...
@@ -115,7 +168,7 @@ class SimFile(Visitor):
             self.db_get_fk(banner)
 
     def stepper_name_cleaning(self, stepper_name):
-        clean_regex = r"\b[\d+(\/|\-|\*|\||')*bpmBPMths]+\b[*]*"
+        clean_regex = r"\(?\b[\d+(\/|\-|\*|\||')*bpmBPMths]+\b[*\)]*"
         stepper_name = re.sub(clean_regex, '', stepper_name)
         stepper_name = re.sub("^\s*", "", stepper_name)
 
