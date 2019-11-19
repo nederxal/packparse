@@ -10,7 +10,8 @@ DONE : Gérer le drop cascade quand on vire un pack |on ne gère que la suppress
 
 # Parseur
 
--Revoir le logging pour faire ça proprement et remonter les merdes (en fait c'est ok mais ça reste un travail sur le niveau de débug)
+- Gérer les cons avec les fichiers ISO !
+- Revoir le logging pour faire ça proprement et remonter les merdes (en fait c'est ok mais ça reste un travail sur le niveau de débug)
 
 BONUX:
 après upload recompresser le pack et le déplacer dans un endroit téléchargeable
@@ -24,6 +25,7 @@ DONE : (avec scandir et glob) Mieux gérer le parsing pour éviter de parser de 
 DONE : Tenter une tentative desespérée pour récupérer le nom du stepper parfois dans le dossier + nettoyage BD
 DONE : Détecter les stepcharts sans steps et ne pas les inclures
 DONE : Calculer le breakdown (façon arrow vortex)
+DONE : correction diverses conneries
 -----
 
 # Web
@@ -40,8 +42,7 @@ Une page de stats
 ------
 
 clean BD 
-\b[\d+(\/|\-|\*|\||')*[bpmBPMths]+\b[*]*
-
+\(?\b[\d+(\/|\-|\*|\||')*bpmBPMths]+\b[*\)+]*
 
 get stepper name
-(?<=\[|\()[\w\s\-&]+(?=\]|\))
+(?<=\[|\()[\w\s\-\+&]+(?=\]|\))

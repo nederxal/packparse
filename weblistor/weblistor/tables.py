@@ -23,7 +23,6 @@ class Pack(db.Model):
 class Stepper(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(255), unique=True, nullable=False)
-    desc = db.Column(db.Text)
 
     def __init__(self, name):
         self.name = name
@@ -52,7 +51,7 @@ class Songs(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(255), unique=False, nullable=False)
     speed = db.Column(db.String(255), nullable=False)
-    single = db.Column(db.Boolean, nullable=False)
+    double = db.Column(db.Boolean, nullable=False)
     difficulty_block = db.Column(db.Integer, nullable=False)
     breakdown = db.Column(db.String(255), nullable=True)
     fk_stepper_name = db.Column(db.Integer, db.ForeignKey("stepper.id"))
@@ -62,11 +61,11 @@ class Songs(db.Model):
                                    db.ForeignKey("difficulties.id"))
     fk_banner = db.Column(db.Integer, db.ForeignKey("banners.id"))
 
-    def __init__(self, name, speed, single, difficulty_block, breakdown,
+    def __init__(self, name, speed, double, difficulty_block, breakdown,
                  fk_stepper_name, fk_difficulty_name, fk_banner):
         self.name = name
         self.speed = speed
-        self.single = single
+        self.double = double
         self.difficulty_block = difficulty_block
         self.breakdown = breakdown
         self.fk_stepper_name = fk_stepper_name
@@ -74,6 +73,7 @@ class Songs(db.Model):
         self.fk_banner = fk_banner
         self.fk_pack_name = None
 
+    @staticmethod
     def get_songs_pack(id):
         return (db.session.query(Songs.name, Songs.speed, Banners.name)
                 .filter(Songs.fk_pack_name == id)
@@ -83,6 +83,7 @@ class Songs(db.Model):
                 .all()
                 )
 
+    @staticmethod
     def get_songs_data(id):
         return (db.session.query(Songs.name,
                                  Stepper.name,

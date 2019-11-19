@@ -29,7 +29,7 @@ def main():
             except NoResultFound:
                 song_extract(db, pack)
             else:
-                pass
+                logging.info("Le pack %s est déjà présent", pack.name)
 
     db.close()
 
@@ -37,24 +37,27 @@ def main():
 
 
 def song_extract(db, pack):
-    lines_tmp = []
     smpath = os.path.join("pack", pack.name, "*/*.sm")
     lark_parser = Lark(open('simfile.lark', 'r').read(), parser="lalr")
 
     for simfile_path in glob.glob(smpath):
+        logging.debug("Parse : %s", simfile_path)
         try:
-            logging.debug("Parse : %s", simfile_path)
             simfile = open(simfile_path, 'r', encoding='utf-8-sig').read()
             simfile_tree = lark_parser.parse(simfile)
             SimFileResult = SimFile(simfile_path, pack, db)
             SimFileResult.visit(simfile_tree)
         except UnexpectedCharacters as e:
-            logging.error("%s du pack %s a une règle inconnue :\n %s",
-                          simfile_path, pack.name, e)
+            logging.critical("%s du pack %s a une règle inconnue :\n %s",
+                             simfile_path, pack.name, e)
+            raise
+        except UnicodeDecodeError as e:
+            logging.critical("%s du pack %s n'est pas UTF-8 ou ASCII",
+                             simfile_path, pack.name)
             raise
         except Exception as e:
-            logging.error("%s du pack %s pose problème",
-                          simfile_path, pack.name)
+            logging.critical("%s du pack %s pose problème : %s",
+                             simfile_path, pack.name, e)
             raise
 
     if len(pack.songs) == 0:
@@ -75,7 +78,7 @@ def db_insert(db, pack):
         db.add_all(pack.songs)
         db.commit()
     except exc.IntegrityError as e:
-        logging.info("Le pack %s est déjà présent dans la base", pack.name)
+        logging.debug("Le pack %s est déjà présent dans la base", pack.name)
         db.rollback()
         pass
 

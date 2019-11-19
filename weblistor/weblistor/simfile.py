@@ -13,13 +13,13 @@ class SimFile(Visitor):
         # specific for SongObject set with header
         self.name = None
         self.speed = None
-        self.single = None
+        self.double = None
         self.fk_banner = None
         # specific for SongObject set with *-chart
         self.difficulty_block = None
         self.fk_difficulty_name = None
         self.fk_stepper_name = None
-        self.breakdown = None  # to set later ...
+        self.breakdown = None
         # specific for the simfile
         self.sm_path = simfile_path
         self.p = p
@@ -60,61 +60,10 @@ class SimFile(Visitor):
         # Empty chart count at least 1 measure
         chart_len = tree.children[-1]
 
-        pause = 0
-        stream = 0
-        final_bd = []
-
-        for m in chart_len.children:
-            if len(m.children) <= 8:
-                if stream >= 1:
-                    final_bd.append(stream)
-                    stream = 0
-                    pause += 1
-                else:
-                    pause += 1
-            else:
-                s = 0
-                for steps in m.children:
-                    if any(x in steps.children[0] for x in ["1", "2", "4"]):
-                        s += 1
-
-                if s == len(m.children):
-                    if pause == 1:
-                        final_bd.append("'")
-                        pause = 0
-                        stream += 1
-                    elif pause in range(2, 4):
-                        final_bd.append("-")
-                        pause = 0
-                        stream += 1
-                    elif pause in range(5, 16):
-                        final_bd.append('/')
-                        pause = 0
-                        stream += 1
-                    elif pause > 16:
-                        final_bd.append('|')
-                        pause = 0
-                        stream += 1
-                    else:
-                        stream += 1
-                else:
-                    if stream > 0:
-                        final_bd.append(stream)
-                    stream = 0
-                    pause += 1
-
-        if stream > 0:
-            final_bd.append(stream)
-        try:
-            if not str(final_bd[0]).isdigit():
-                final_bd.pop(0)
-        except IndexError:
-            pass
-        self.breakdown = ''.join(map(str, final_bd))
-
         if len(chart_len.children) <= 1:
             pass
         else:
+            self.breakdown_calculation(chart_len)
             # if 5 = name artist exist if 4 = name artist inexistent
             if len(tree.children) == 5:
                 self.stepper_name_cleaning(tree.children[0])
@@ -125,12 +74,42 @@ class SimFile(Visitor):
                 difficulty_name = Difficulties(tree.children[0])
                 self.difficulty_block = tree.children[1]
             else:
-                print("ERROR sur les data après NOTES")
+                print("ERROR sur les data après Single NOTES", self.sm_path)
                 sys.exit(1)
 
             self.db_get_fk(difficulty_name)
-            self.single = True
-            song = Songs(self.name, self.speed, self.single,
+            self.double = False
+            song = Songs(self.name, self.speed, self.double,
+                         self.difficulty_block, self.breakdown,
+                         self.fk_stepper_name.id, self.fk_difficulty_name.id,
+                         self.fk_banner.id)
+            self.add_to_pack(song)
+
+    def double_chart(self, tree):
+        chart_len = tree.children[-1]
+
+        if len(chart_len.children) <= 1:
+            pass
+        else:
+            self.breakdown_calculation(chart_len)
+
+            if len(tree.children) == 5:
+                self.stepper_name_cleaning(tree.children[0])
+                difficulty_name = Difficulties(tree.children[1])
+                self.difficulty_block = str(tree.children[2])
+            elif len(tree.children) == 4:
+                self.stepper_name_cleaning('')
+                difficulty_name = Difficulties(tree.children[0])
+                self.difficulty_block = tree.children[1]
+            else:
+                print(len(tree.children))
+                print(tree.children)
+                print("ERROR sur les data après Double NOTES", self.sm_path)
+                sys.exit(1)
+
+            self.db_get_fk(difficulty_name)
+            self.double = True
+            song = Songs(self.name, self.speed, self.double,
                          self.difficulty_block, self.breakdown,
                          self.fk_stepper_name.id, self.fk_difficulty_name.id,
                          self.fk_banner.id)
@@ -168,13 +147,13 @@ class SimFile(Visitor):
             self.db_get_fk(banner)
 
     def stepper_name_cleaning(self, stepper_name):
-        clean_regex = r"\(?\b[\d+(\/|\-|\*|\||')*bpmBPMths]+\b[*\)]*"
+        clean_regex = r"\(?\b[\d+(\/|\-|\*|\||')*bpmBPMths]+\b[*\)+]*"
         stepper_name = re.sub(clean_regex, '', stepper_name)
-        stepper_name = re.sub("^\s*", "", stepper_name)
+        stepper_name = re.sub(r"^\s*", "", stepper_name)
 
         # Last try to get it ...
-        if not stepper_name:
-            find_regex = r"(?<=\[|\()[\w\s\-&]+(?=\]|\))"
+        if len(stepper_name) == 0:
+            find_regex = r"(?<=\[|\()[\w\s\-\+&]+(?=\]|\))"
             folder_song = os.path.basename(os.path.dirname(self.sm_path))
             result = re.findall(find_regex, folder_song)
 
@@ -209,6 +188,61 @@ class SimFile(Visitor):
         else:
             raise
             sys.exit(1)
+
+    # Too lazy to do something clean and accurate ...
+    def breakdown_calculation(self, chart_len):
+        pause = 0
+        stream = 0
+        final_bd = []
+
+        for m in chart_len.children:
+            if len(m.children) <= 8:
+                if stream >= 1:
+                    final_bd.append(stream)
+                    stream = 0
+                    pause += 1
+                else:
+                    pause += 1
+            else:
+                s = 0
+                for steps in m.children:
+                    if any(x in steps.children[0] for x in ["1", "2", "4"]):
+                        s += 1
+
+                # Don't forget range : [a, b[
+                if s == len(m.children):
+                    if pause == 1:
+                        final_bd.append("'")
+                        pause = 0
+                        stream += 1
+                    elif pause in range(2, 5):
+                        final_bd.append("-")
+                        pause = 0
+                        stream += 1
+                    elif pause in range(5, 16):
+                        final_bd.append('/')
+                        pause = 0
+                        stream += 1
+                    elif pause >= 16:
+                        final_bd.append('|')
+                        pause = 0
+                        stream += 1
+                    else:
+                        stream += 1
+                else:
+                    if stream > 0:
+                        final_bd.append(stream)
+                    stream = 0
+                    pause += 1
+
+        if stream > 0:
+            final_bd.append(stream)
+        try:
+            if not str(final_bd[0]).isdigit():
+                final_bd.pop(0)
+        except IndexError:
+            pass
+        self.breakdown = ''.join(map(str, final_bd))
 
     def add_to_pack(self, song):
         self.p.songs.append(song)
