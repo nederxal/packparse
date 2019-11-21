@@ -12,7 +12,8 @@ class SimFile(Visitor):
     def __init__(self, simfile_path, p, dbconn):
         # specific for SongObject set with header
         self.name = None
-        self.speed = None
+        self.min_speed = None
+        self.max_speed = None
         self.double = None
         self.fk_banner = None
         # specific for SongObject set with *-chart
@@ -36,21 +37,31 @@ class SimFile(Visitor):
                 if data.children[0] == "BANNER":
                     self.get_banner_id(data.children[1])
                 if data.children[0] == "DISPLAYBPM":
-                    self.speed = re.sub(r"\.[0-9]*", "", data.children[1])
+                    self.max_speed = re.sub(r"\.[0-9]*", "", data.children[1])
                 if data.children[0] == "BPMS":
                     bpms = data.children[1]
             except IndexError:
                 pass
 
-        if not self.speed:
+        if not self.max_speed:
             bpms = re.sub("[0-9.]*=", "", bpms)
             bpms = re.sub(r"\.[0-9]*", "", bpms)
             t_line = bpms.split(",")
             t_line = list(map(int, t_line))
             if max(t_line) != min(t_line):
-                self.speed = str(min(t_line))+":"+str(max(t_line))
+                self.min_speed = min(t_line)
+                self.max_speed = max(t_line)
             else:
-                self.speed = max(t_line)
+                self.min_speed = max(t_line)
+                self.max_speed = max(t_line)
+        elif re.search(":", self.max_speed):
+            self.min_speed, self.max_speed = self.max_speed.split(":")
+        elif self.max_speed == "*":
+            # From : https://github.com/stepmania/stepmania/wiki/sm#displaybpm
+            # If we can't set BPM set it to 0 :/
+            self.min_speed = self.max_speed = 0
+        else:
+            self.min_speed = self.max_speed
 
         if not self.fk_banner:
             self.get_banner_id("default_banner.png")
@@ -79,8 +90,8 @@ class SimFile(Visitor):
 
             self.db_get_fk(difficulty_name)
             self.double = False
-            song = Songs(self.name, self.speed, self.double,
-                         self.difficulty_block, self.breakdown,
+            song = Songs(self.name, self.min_speed, self.max_speed,
+                         self.double, self.difficulty_block, self.breakdown,
                          self.fk_stepper_name.id, self.fk_difficulty_name.id,
                          self.fk_banner.id)
             self.add_to_pack(song)
@@ -109,8 +120,8 @@ class SimFile(Visitor):
 
             self.db_get_fk(difficulty_name)
             self.double = True
-            song = Songs(self.name, self.speed, self.double,
-                         self.difficulty_block, self.breakdown,
+            song = Songs(self.name, self.min_speed, self.max_speed,
+                         self.double, self.difficulty_block, self.breakdown,
                          self.fk_stepper_name.id, self.fk_difficulty_name.id,
                          self.fk_banner.id)
             self.add_to_pack(song)
