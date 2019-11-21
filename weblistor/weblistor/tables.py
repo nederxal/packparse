@@ -77,7 +77,8 @@ class Songs(db.Model):
 
     @staticmethod
     def get_songs_pack(id):
-        songs_pack = (db.session.query(Songs.name, Songs.speed, Banners.name)
+        songs_pack = (db.session.query(Banners.name, Songs.name,
+                                       Songs.min_speed, Songs.max_speed)
                       .filter(Songs.fk_pack_name == id)
                       .filter(Songs.fk_banner == Banners.id)
                       .group_by(Songs.name)

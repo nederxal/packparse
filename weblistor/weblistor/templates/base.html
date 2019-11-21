@@ -3,25 +3,19 @@
     <head>
     <title>Welcome to PackParser</title>
         <meta charset="utf-8">
-        <link href="{{ url_for('static', filename='css/bootstrap.css') }}" rel="stylesheet">
-        <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
-        <!-- JQuery-->
-        <script src="{{ url_for('static', filename='js/jquery.js') }}"></script>
-        <script src="{{ url_for('static', filename='js/bootstrap.js') }}"></script>
+        {# utilisation de milligram parce que voilà .... un jour avec bootstrap pour quelque chose de plus complet ... #}
+        <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Roboto:300,300italic,700,700italic">
+        <link href="{{ url_for('static', filename='css/milligram.css') }}" rel="stylesheet">
+        <link href="{{ url_for('static', filename='css/normalize.css') }}" rel="stylesheet">
     </head>
     <body>
-        <div>
+    <div class="container">
+        <header class=row>
             <!-- top banner -->
-        </div>
-        <div>
-            <form method="POST" action="">
-                {{ pack_form.csrf_token }}
-                <div>{{ pack_form.pack_name.label }} : {{ pack_form.pack_name() }}</div>
-                <button type="submit">Find da pack !</button>
-            </form>
-        </div>
+        </header>
         <!-- les résultats -->
         {% block container %} {% endblock %}
         <!-- footer -->
+    </div>
     </body>
 </html>

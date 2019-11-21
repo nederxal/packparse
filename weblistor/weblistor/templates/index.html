@@ -1,20 +1,71 @@
 {% extends 'base.html' %}
 
 {% block container %}
+<p>
+Copie éhontée d'un mélange entre divinerolligigny (me rappelle j'amais le nom) et stepmaniaonline.<br>
+On ne peut pas chercher les musiques pour couples ! Seul le double est disponible.
+</p>
+<form method="POST" action="" id="1">
+    <fieldset>
+        {{ pack_form.csrf_token }}
+        <div class="row">
+            <div class="column column-25">{{ pack_form.pack_name.label() }}</div>
+            <div class="column">{{ pack_form.pack_name() }}</div>
+        </div>
+        <button class="button-primary" type="submit">trouve pack !</button>
+    </fieldset>
+</form>
+
+<form method="POST" action="{{ url_for('songs_search') }}" id="2">
+    <fieldset>
+        {{ pack_form.csrf_token }}
+        <div class="row">
+            <div class="column column-25">{{ song_form.song_name.label() }}</div>
+            <div class="column column-25">{{ song_form.song_name() }}</div>
+            <div class="column column-25">{{ song_form.stepper.label() }}</div>
+            <div class="column column-25">{{ song_form.stepper() }}</div>
+        </div>
+        <div class="row">
+            <div class="column column-25">{{ song_form.speed_low.label() }}</div>
+            <div class="column column-25">{{ song_form.speed_low() }}</div>
+            <div class="column column-25">{{ song_form.speed_high.label() }}</div>
+            <div class="column column-25">{{ song_form.speed_high() }}</div>
+        </div>
+        <div class="row">
+            <div class="column column-25">{{ song_form.double.label() }}</div>
+            <div class="column column-25">{{ song_form.double() }}</div>
+            <div class="column column-25">{{ song_form.block.label() }}</div>
+            <div class="column column-25">{{ song_form.block() }}</div>
+        </div>
+        <div class="row">
+            <div class="column column-25">{{ song_form.diff.label() }}</div>
+            <div class="column column-25">{{ song_form.diff() }}</div>
+        </div>
+        <button class="button-primary" type="submit">Va chercher music !</button>
+    </fieldset>
+</form>
 
 <div>
+    {% if pack_name %}
+    <p>Tu cherches un truc qui contiens <em>{{ pack_name }}</em> ... </p>
+    {% else %}
     <p>Les 5 dernières entrées</p>
-    <table border=1>
+    {% endif %}
+    <table>
         <thead>
-            <td> Pack Name </td>
-            <td> Entry date</td>
+            <tr>
+                <th> Pack Name </th>
+                <th> Entry date</th>
+            </tr>
         </thead>
+        <tbody>
         {% for r in row %}
             <tr>
                 <td><a href="{{ url_for('list_pack', id=r.id) }}">{{ r.name }}</a></td>
                 <td>{{ r.entry_date }}</td>
             </tr>
         {% endfor %}
+        </tbody>
     </table>
 </div>
 
