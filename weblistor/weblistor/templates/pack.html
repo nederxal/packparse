@@ -2,20 +2,43 @@
 
 {% block container %}
 
-<div>
-    <p>Les packs proche ou loin de la demande</p>
-    <table border=1>
-        <thead>
-            <td> Pack Name </td>
-            <td> Entry date</td>
-        </thead>
-        {% for r in row %}
-            <tr>
-                <td><a href="{{ url_for('list_pack', id=r.id) }}">{{ r.name }}</a></td>
-                <td>{{ r.entry_date }}</td>
-            </tr>
-        {% endfor %}
-    </table>
+<p>
+Si le BPM est égale à 0 c'est qu'il n'a pas pu être calculé ...<br>
+(*) Attention le Breakdown affiché est <em><strong>incertain</strong></em> ... flemme de le calculer correctement  ^_^<br>
+<a class="button" href={{ '/' }}>Retour page principale !</a>
+</p>
+{# Sale mais voir dans views.py pourquoi .... :'( #}
+{% for r in song_row -%}
+<div class="row">
+    <div class="column"> <img src="/static/images/{{ r[0] }}" /></div>
+    <div class="column column-offset-10"> <h2>{{ r[1] }}<h2></div>
+    {% if r[2] == r[3] %}
+    <div class="column"> <h2>{{ r[2] }} <em>BPM</em></h2></div>
+    {% else %}
+    <div class="column"> <h2>{{ r[2] }} - {{ r[3] }} <em>BPM range</em></h2></div>
+    {% endif %}
 </div>
+<table>
+<thead>
+    <tr>
+        <th>Stepper</th>
+        <th>Blocks</th>
+        <th>Difficulty</th>
+        <th>Breakdown (*)</th>
+    </tr>
+</thead>
+    {% for d in data_row -%}
+        {% if d[0] == r[1] -%}
+        <tr>
+            <td> {{ d[1] }} </td>
+            <td> {{ d[2] }} </td>
+            <td> {{ d[3] }} </td>
+            <td> {{ d[4] }} </td>
+        </tr>
+        {% endif %}
+    {%- endfor %}
+</table>
+<hr>
+{%- endfor %}
 
 {% endblock %}
