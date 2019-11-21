@@ -13,7 +13,7 @@ from sqlalchemy.orm.exc import NoResultFound
 from weblistor.tables import Pack, Stepper, Banners, Difficulties, Songs
 from weblistor.simfile import SimFile
 
-logging.basicConfig(filename='packlistor.log', level=logging.INFO)
+logging.basicConfig(filename='packlistor.log', level=logging.DEBUG)
 
 
 def main():
@@ -27,9 +27,8 @@ def main():
             try:
                 db.query(Pack).filter(Pack.name == pack.name).one()
             except NoResultFound:
+                logging.debug("Extraction des songs du pack %s", pack.name)
                 song_extract(db, pack)
-            else:
-                logging.info("Le pack %s est déjà présent", pack.name)
 
     db.close()
 
@@ -67,18 +66,27 @@ def song_extract(db, pack):
 
 
 def db_insert(db, pack):
+    fk_pack = None
     try:
         db.add(pack)
         db.commit()
         fk_pack = db.query(Pack).filter(Pack.name == pack.name).one()
 
+    except exc.IntegrityError as e:
+        logging.debug("Une erreur lors de l'insertion du pack %s\n \
+            %s", pack.name, e)
+        db.rollback()
+        return 1
+
+    try:
         for s in pack.songs:
             s.fk_pack_name = fk_pack.id
 
         db.add_all(pack.songs)
         db.commit()
     except exc.IntegrityError as e:
-        logging.debug("Le pack %s est déjà présent dans la base", pack.name)
+        logging.debug("Une erreur lors de l'insertion de la song %s\n \
+            %s", s.name, e)
         db.rollback()
         pass
 

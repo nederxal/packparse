@@ -50,7 +50,8 @@ class Difficulties(db.Model):
 class Songs(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(255), unique=False, nullable=False)
-    speed = db.Column(db.String(255), nullable=False)
+    min_speed = db.Column(db.Integer, nullable=False)
+    max_speed = db.Column(db.Integer, nullable=False)
     double = db.Column(db.Boolean, nullable=False)
     difficulty_block = db.Column(db.Integer, nullable=False)
     breakdown = db.Column(db.String(255), nullable=True)
@@ -61,10 +62,11 @@ class Songs(db.Model):
                                    db.ForeignKey("difficulties.id"))
     fk_banner = db.Column(db.Integer, db.ForeignKey("banners.id"))
 
-    def __init__(self, name, speed, double, difficulty_block, breakdown,
-                 fk_stepper_name, fk_difficulty_name, fk_banner):
+    def __init__(self, name, min_speed, max_speed, double, difficulty_block,
+                 breakdown, fk_stepper_name, fk_difficulty_name, fk_banner):
         self.name = name
-        self.speed = speed
+        self.min_speed = min_speed
+        self.max_speed = max_speed
         self.double = double
         self.difficulty_block = difficulty_block
         self.breakdown = breakdown
@@ -75,22 +77,25 @@ class Songs(db.Model):
 
     @staticmethod
     def get_songs_pack(id):
-        return (db.session.query(Songs.name, Songs.speed, Banners.name)
-                .filter(Songs.fk_pack_name == id)
-                .filter(Songs.fk_banner == Banners.id)
-                .group_by(Songs.name)
-                .order_by(Songs.name)
-                .all()
-                )
+        songs_pack = (db.session.query(Songs.name, Songs.speed, Banners.name)
+                      .filter(Songs.fk_pack_name == id)
+                      .filter(Songs.fk_banner == Banners.id)
+                      .group_by(Songs.name)
+                      .order_by(Songs.name)
+                      .all()
+                      )
+        songs_data = (db.session.query(Songs.name,
+                                       Stepper.name,
+                                       Songs.difficulty_block,
+                                       Difficulties.name,
+                                       Songs.breakdown)
+                      .filter(Songs.fk_pack_name == id)
+                      .filter(Songs.fk_difficulty_name == Difficulties.id)
+                      .filter(Songs.fk_stepper_name == Stepper.id)
+                      .order_by(Songs.difficulty_block)
+                      .all()
+                      )
+        return (songs_pack, songs_data)
 
-    @staticmethod
-    def get_songs_data(id):
-        return (db.session.query(Songs.name,
-                                 Stepper.name,
-                                 Songs.difficulty_block,
-                                 Difficulties.name)
-                .filter(Songs.fk_pack_name == id)
-                .filter(Songs.fk_difficulty_name == Difficulties.id)
-                .filter(Songs.fk_stepper_name == Stepper.id)
-                .all()
-                )
+    # @staticmethod
+    # def search_song(name, speed, stepper, double, block, difficulty):
