@@ -7,11 +7,11 @@ Si le BPM est égale à 0 c'est qu'il n'a pas pu être calculé ...<br>
 (*) Attention le Breakdown affiché est <em><strong>incertain</strong></em> ... flemme de le calculer correctement  ^_^<br>
 <a class="button" href={{ '/' }}>Retour page principale !</a>
 </p>
-{# Sale mais voir dans views.py pourquoi .... :'( #}
+
 {% for r in song_row -%}
 <div class="row">
     <div class="column"> <img src="/static/images/{{ r[0] }}" /></div>
-    <div class="column column-offset-10"> <h2>{{ r[1] }}<h2></div>
+    <div class="column column-offset-10" id="{{ r[1] }}"> <h2>{{ r[1] }}<h2></div>
     {% if r[2] == r[3] %}
     <div class="column"> <h2>{{ r[2] }} <em>BPM</em></h2></div>
     {% else %}
