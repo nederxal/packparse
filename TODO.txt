@@ -12,6 +12,7 @@ DONE : Gérer le drop cascade quand on vire un pack |on ne gère que la suppress
 
 - Gérer les cons avec les fichiers ISO !
 - Revoir le logging pour faire ça proprement et remonter les merdes (en fait c'est ok mais ça reste un travail sur le niveau de débug)
+- trouver pourquoi certaines images ne remontent pas alors quelles sont présentes ...
 
 BONUX:
 après upload recompresser le pack et le déplacer dans un endroit téléchargeable
@@ -29,11 +30,10 @@ DONE : correction diverses conneries
 -----
 
 # Web
-Mieux gérer la recherche (pas uniquement startswith)
-Ajouter la recherche par songs (avec paramètre speed / stepartiste / diff block / diff name)
-Ranger les requètes de recherches avec les Objets de base (table.view) pour plus de cohérence
-Login avec upload
-CSS avec bootstrap :(
+DONE : Mieux gérer la recherche (pas uniquement startswith)
+DONE : Ajouter la recherche par songs (avec paramètre speed / stepartiste / diff block / diff name)
+DONE : Ranger les requètes de recherches avec les Objets de base (table.view) pour plus de cohérence
+DONE : CSS avec milligram
 
 Bonux:
 Une page de stats

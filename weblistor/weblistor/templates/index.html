@@ -1,56 +1,63 @@
 {% extends 'base.html' %}
 
 {% block container %}
+<br>
 <p>
 Copie éhontée d'un mélange entre divinerolligigny (me rappelle j'amais le nom) et stepmaniaonline.<br>
 On ne peut pas chercher les musiques pour couples ! Seul le double est disponible.
 </p>
-<form method="POST" action="" id="1">
+<ul>
+    {% for message in get_flashed_messages(with_categories=false) %}
+    <li style="background-color:red">{{ message }}</li>
+    {% endfor %}
+</ul>
+<form method="POST" action="">
     <fieldset>
         {{ pack_form.csrf_token }}
         <div class="row">
             <div class="column column-25">{{ pack_form.pack_name.label() }}</div>
             <div class="column">{{ pack_form.pack_name() }}</div>
+            <br>
         </div>
+        <br>
         <button class="button-primary" type="submit">trouve pack !</button>
     </fieldset>
 </form>
 
-<form method="POST" action="{{ url_for('songs_search') }}" id="2">
+
+<form method="POST" action="{{ url_for('songs_search') }}">
     <fieldset>
         {{ pack_form.csrf_token }}
         <div class="row">
-            <div class="column column-25">{{ song_form.song_name.label() }}</div>
+            <div class="column column-10">{{ song_form.song_name.label() }}</div>
             <div class="column column-25">{{ song_form.song_name() }}</div>
-            <div class="column column-25">{{ song_form.stepper.label() }}</div>
+            <div class="column column-10 column-offset-10">{{ song_form.stepper.label() }}</div>
             <div class="column column-25">{{ song_form.stepper() }}</div>
         </div>
         <div class="row">
-            <div class="column column-25">{{ song_form.speed_low.label() }}</div>
+            <div class="column column-10">{{ song_form.speed_low.label() }}</div>
             <div class="column column-25">{{ song_form.speed_low() }}</div>
-            <div class="column column-25">{{ song_form.speed_high.label() }}</div>
+            <div class="column column-10 column-offset-10">{{ song_form.speed_high.label() }}</div>
             <div class="column column-25">{{ song_form.speed_high() }}</div>
         </div>
         <div class="row">
-            <div class="column column-25">{{ song_form.double.label() }}</div>
+            <div class="column column-10">{{ song_form.double.label() }}</div>
             <div class="column column-25">{{ song_form.double() }}</div>
-            <div class="column column-25">{{ song_form.block.label() }}</div>
+            <div class="column column-10 column-offset-10">{{ song_form.block.label() }}</div>
             <div class="column column-25">{{ song_form.block() }}</div>
         </div>
-        <div class="row">
-            <div class="column column-25">{{ song_form.diff.label() }}</div>
-            <div class="column column-25">{{ song_form.diff() }}</div>
-        </div>
+        <br>
         <button class="button-primary" type="submit">Va chercher music !</button>
     </fieldset>
 </form>
 
 <div>
     {% if pack_name %}
-    <p>Tu cherches un truc qui contiens <em>{{ pack_name }}</em> ... </p>
+    <p><h3>Tu cherches un truc qui contiens <strong><em>{{ pack_name }}</em></strong> ... </h3></p>
     {% else %}
     <p>Les 5 dernières entrées</p>
     {% endif %}
+    {% if row %}
     <table>
         <thead>
             <tr>
@@ -67,6 +74,8 @@ On ne peut pas chercher les musiques pour couples ! Seul le double est disponibl
         {% endfor %}
         </tbody>
     </table>
+    {% else %}
+    <p>CEPENDANT ... y'a rien qui correspond ... mhhhh</p>
+    {% endif %}
 </div>
-
 {% endblock %}

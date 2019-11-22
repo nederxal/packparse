@@ -4,6 +4,7 @@
 
 from datetime import datetime
 from weblistor import db
+from sqlalchemy import and_
 from sqlalchemy.orm import relationship, session
 
 
@@ -85,11 +86,9 @@ class Songs(db.Model):
                       .order_by(Songs.name)
                       .all()
                       )
-        songs_data = (db.session.query(Songs.name,
-                                       Stepper.name,
+        songs_data = (db.session.query(Songs.name, Stepper.name,
                                        Songs.difficulty_block,
-                                       Difficulties.name,
-                                       Songs.breakdown)
+                                       Difficulties.name, Songs.breakdown)
                       .filter(Songs.fk_pack_name == id)
                       .filter(Songs.fk_difficulty_name == Difficulties.id)
                       .filter(Songs.fk_stepper_name == Stepper.id)
@@ -98,5 +97,27 @@ class Songs(db.Model):
                       )
         return (songs_pack, songs_data)
 
-    # @staticmethod
-    # def search_song(name, speed, stepper, double, block, difficulty):
+    @staticmethod
+    def search_song(song_name, speed_low, speed_high, block, double, stepper):
+        song_list = (db.session.query(Pack.name, Pack.id,
+                                      Songs.name, Songs.min_speed,
+                                      Songs.max_speed, Banners.name)
+                     .filter(Songs.fk_pack_name == Pack.id)
+                     .filter(Songs.fk_banner == Banners.id)
+                     .filter(Songs.name.ilike("%"+song_name+"%"))
+                     .filter(and_(Songs.min_speed >= speed_low,
+                                  Songs.max_speed <= speed_high))
+                     .filter(Songs.double == double)
+                     .join(Stepper).filter(Stepper.name.ilike("%"+stepper+"%"))
+                     .group_by(Pack.name)
+                     .group_by(Songs.name)
+                     .order_by(Pack.name)
+                     .order_by(Songs.name)
+                     )
+
+        if len(block) == 0:
+            song_list = song_list.filter(Songs.difficulty_block >= 1)
+        else:
+            song_list = song_list.filter(Songs.difficulty_block == 11)
+
+        return song_list.all()
