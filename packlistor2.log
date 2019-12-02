@@ -1,0 +1,14 @@
+2019-11-30 23:08:21,671 : __main__ : DEBUG : Extraction des songs du pack Eurobeat Is Fantastic
+2019-11-30 23:08:21,798 : __main__ : DEBUG : Parse : pack\Eurobeat Is Fantastic\Breakin' Out - [Honk]\breakin.sm
+2019-11-30 23:08:22,118 : __main__ : DEBUG : Parse : pack\Eurobeat Is Fantastic\Burning up the Night (Total Fire) - [Rems]\burning.sm
+2019-11-30 23:08:22,509 : __main__ : DEBUG : Parse : pack\Eurobeat Is Fantastic\Crazy On Emotion - [ITGAlex]\crazy.sm
+2019-11-30 23:08:22,777 : __main__ : DEBUG : Parse : pack\Eurobeat Is Fantastic\Deja Vu - [Arvin]\dejavu.sm
+2019-11-30 23:08:23,111 : __main__ : DEBUG : Parse : pack\Eurobeat Is Fantastic\Far From The Light - [Rems]\farfromthelight.sm
+2019-11-30 23:08:23,366 : __main__ : DEBUG : Parse : pack\Eurobeat Is Fantastic\Forever Young - [Zaia]\Forever Young.sm
+2019-11-30 23:08:23,605 : __main__ : DEBUG : Parse : pack\Eurobeat Is Fantastic\Freedom Ride - [Rems]\freedom.sm
+2019-11-30 23:08:23,913 : __main__ : DEBUG : Parse : pack\Eurobeat Is Fantastic\Gas Gas Gas - [Honk]\gasgasgas.sm
+2019-11-30 23:08:24,221 : __main__ : DEBUG : Parse : pack\Eurobeat Is Fantastic\Go Beat Crazy - [Zaia]\Go Beat Crazy.sm
+2019-11-30 23:08:24,519 : __main__ : DEBUG : Parse : pack\Eurobeat Is Fantastic\Heart's On Fire - [Rems]\heartonfire.sm
+2019-11-30 23:08:24,853 : __main__ : DEBUG : Parse : pack\Eurobeat Is Fantastic\Hooligans - [Rems]\hooligans.sm
+2019-11-30 23:08:25,171 : __main__ : DEBUG : Parse : pack\Eurobeat Is Fantastic\Hot Limit - [Aoreo]\Hot Limit.sm
+2019-11-30 23:08:25,327 : __main__ : CRITICAL : pack\Eurobeat Is Fantastic\Hot Limit - [Aoreo]\Hot Limit.sm du pack Eurobeat Is Fantastic pose problème : name 'logger' is not defined

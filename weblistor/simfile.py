@@ -1,6 +1,7 @@
 import os
 import sys
 import re
+import logging
 from lark import Visitor
 from shutil import copy, SameFileError
 from hashlib import sha256
@@ -9,6 +10,12 @@ from weblistor.tables import Pack, Stepper, Banners, Difficulties, Songs
 
 
 class SimFile(Visitor):
+    # format = "%(asctime)s : %(name)s : %(levelname)s : %(message)s"
+    # logger = logging.basicConfig(filename='packlistor2.log',
+    #                              format=format,
+    #                              level=logging.DEBUG)
+    # logger = logging.getLogger(__name__)
+
     def __init__(self, simfile_path, p, dbconn):
         # specific for SongObject set with header
         self.name = None
@@ -85,8 +92,8 @@ class SimFile(Visitor):
                 difficulty_name = Difficulties(tree.children[0])
                 self.difficulty_block = tree.children[1]
             else:
-                print("ERROR sur les data après Single NOTES", self.sm_path)
-                sys.exit(1)
+                assert (4 <= len(tree.children) <= 5), \
+                    "ERROR sur les data : %s" % (self.sm_path)
 
             self.db_get_fk(difficulty_name)
             self.double = False
@@ -113,10 +120,8 @@ class SimFile(Visitor):
                 difficulty_name = Difficulties(tree.children[0])
                 self.difficulty_block = tree.children[1]
             else:
-                print(len(tree.children))
-                print(tree.children)
-                print("ERROR sur les data après Double NOTES", self.sm_path)
-                sys.exit(1)
+                assert (4 <= len(tree.children) <= 5), \
+                    "ERROR sur les data : %s" % (self.sm_path)
 
             self.db_get_fk(difficulty_name)
             self.double = True
@@ -132,30 +137,33 @@ class SimFile(Visitor):
         banner_path = os.path.join(os.path.dirname(self.sm_path), banner_path)
         filename, ext = os.path.splitext(banner_path)
 
-        try:
-            banner_rename = (sha256(open(banner_path, 'rb')
-                                    .read()).hexdigest()+ext)
-            banner_dest = os.path.join(set_path, banner_rename)
-            copy(banner_path, banner_dest)
-            banner = Banners(banner_rename)
-            self.db_get_fk(banner)
-        except FileNotFoundError as e:
-            # It happens sometime people set the banner with specific
-            # name in the SM file BUT they kept the name "banner.png" ...
+        # Sometimes the file defined in smfile has not the same extention
+        # than the real file
+        # Fun facts. If the file has not the same extension BUT has
+        # 'banner' in the name, stepmania found the banner.
+        # Also it seems if the extension is not good stepmania can still find
+        # the banner ... (maybe related to previous fact)
+        for extension in ["jpeg", "jpg", "png"]:
             try:
-                reg = r'(/|\\\\)[\ a-zA-Z0-9_-]*.(png|jpg|jpeg)$'
-                banner_path = re.sub(reg, "/banner.png", banner_path)
-                banner_rename = (sha256(open(banner_path, 'rb')
-                                        .read()).hexdigest()+ext)
+                banner_path_ext = '.'.join([filename, extension])
+                banner_rename = (sha256(open(banner_path_ext, 'rb').read())
+                                 .hexdigest()+'.'+extension)
                 banner_dest = os.path.join(set_path, banner_rename)
-                copy(banner_path, banner_dest)
+                copy(banner_path_ext, banner_dest)
                 banner = Banners(banner_rename)
                 self.db_get_fk(banner)
+                return None
             except FileNotFoundError as e:
-                banner = Banners("default_banner.png")
+                # add logging here (debug)
+                pass
+            except SameFileError as e:
                 self.db_get_fk(banner)
-        except SameFileError as e:
-            self.db_get_fk(banner)
+                return None
+
+        # add another logging here (warn)
+        # if we REALLY can't find ...
+        banner = Banners("default_banner.png")
+        self.db_get_fk(banner)
 
     def stepper_name_cleaning(self, stepper_name):
         clean_regex = r"\(?\b[\d+(\/|\-|\*|\||')*bpmBPMths]+\b[*\)+]*"

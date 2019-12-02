@@ -1,10 +1,11 @@
 *.pyc
 *.db*
-weblistor/pack/*
-!weblistor/pack/.gitkeep
-/weblistor/weblistor/static/images/*
-!/weblistor/weblistor/static/images/default_banner.jpg
+pack/*
+!/pack/.gitkeep
+weblistor/static/images/*
+!/weblistor/static/images/default_banner.jpg
 weblistor.log
 packlistor.log
 env_packparse/*
+env_weblistor/*
 .vscode/*
