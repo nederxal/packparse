@@ -4,6 +4,7 @@
 
 from flask import request, render_template, redirect, url_for, session, flash
 from datetime import datetime
+from sqlalchemy import func, distinct
 from sqlalchemy.orm import sessionmaker, session
 from werkzeug.datastructures import ImmutableMultiDict
 from weblistor import app
@@ -37,8 +38,14 @@ def index():
 @app.route('/pid/<int:id>', methods=['GET'])
 def list_pack(id):
     song_row, data_row = Songs.get_songs_pack(id)
+    pack_name = Pack.get_name(id)
+    (total_songs, lowest_bpm, highest_bpm,
+     lowest_diff, highest_diff) = Pack.get_stats(id)
 
-    return render_template('pack.html', song_row=song_row, data_row=data_row)
+    return render_template('pack.html', song_row=song_row, data_row=data_row,
+                           pack_name=pack_name, total_songs=total_songs,
+                           lowest_bpm=lowest_bpm,  highest_bpm=highest_bpm,
+                           lowest_diff=lowest_diff, highest_diff=highest_diff)
 
 
 @app.route('/sli', methods=['GET', 'POST'])

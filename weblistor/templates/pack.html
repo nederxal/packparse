@@ -2,10 +2,10 @@
 
 {% block container %}
 
+<p><h1>{{ pack_name.name }} / {{ total_songs[0] }} Songs / {{ lowest_bpm[0] }} - {{ highest_bpm[0] }} BPM / Diff from  {{ lowest_diff[0] }} to {{ highest_diff[0] }} </h1><a class="button" href={{ '/' }}>Retour page principale !</a></p>
 <p>
 Si le BPM est égale à 0 c'est qu'il n'a pas pu être calculé ...<br>
 (*) Attention le Breakdown affiché est <em><strong>incertain</strong></em> ... flemme de le calculer correctement  ^_^<br>
-<a class="button" href={{ '/' }}>Retour page principale !</a>
 </p>
 
 {% for r in song_row -%}

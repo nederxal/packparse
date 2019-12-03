@@ -4,7 +4,7 @@
 
 from datetime import datetime
 from weblistor import db
-from sqlalchemy import and_
+from sqlalchemy import and_, func, distinct
 from sqlalchemy.orm import relationship, session
 
 
@@ -19,6 +19,26 @@ class Pack(db.Model):
         self.name = name
         self.entry_date = datetime.now()
         self.songs = []
+
+    @staticmethod
+    def get_name(id):
+        return(db.session.query(Pack.name).filter(Pack.id == id).one())
+
+    @staticmethod
+    def get_stats(id):
+        total_songs = (db.session.query(func.count(distinct(Songs.name)))
+                       .filter(Songs.fk_pack_name == id).one())
+        lowest_bpm = (db.session.query(func.min(distinct(Songs.min_speed)))
+                      .filter(Songs.fk_pack_name == id).one())
+        highest_bpm = (db.session.query(func.max(distinct(Songs.max_speed)))
+                       .filter(Songs.fk_pack_name == id).one())
+        lowest_diff = (db.session
+                       .query(func.min(distinct(Songs.difficulty_block)))
+                       .filter(Songs.fk_pack_name == id).one())
+        highest_diff = (db.session
+                        .query(func.max(distinct(Songs.difficulty_block)))
+                        .filter(Songs.fk_pack_name == id).one())
+        return total_songs, lowest_bpm, highest_bpm, lowest_diff, highest_diff
 
 
 class Stepper(db.Model):
@@ -118,6 +138,6 @@ class Songs(db.Model):
         if len(block) == 0:
             song_list = song_list.filter(Songs.difficulty_block >= 1)
         else:
-            song_list = song_list.filter(Songs.difficulty_block == 11)
+            song_list = song_list.filter(Songs.difficulty_block == block)
 
         return song_list.all()

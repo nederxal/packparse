@@ -36,7 +36,7 @@ DONE : Ranger les requètes de recherches avec les Objets de base (table.view) p
 DONE : CSS avec milligram
 
 Bonux:
-Une page de stats
+Ajout de stats (total de musiques range bpm / range diff)
 
 
 ------
