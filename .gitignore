@@ -3,7 +3,7 @@
 pack/*
 !/pack/.gitkeep
 weblistor/static/images/*
-!/weblistor/static/images/default_banner.jpg
+!/weblistor/static/images/default_banner.png
 weblistor/static/download/*
 !weblistor/static/download/.gitkeep
 weblistor.log
