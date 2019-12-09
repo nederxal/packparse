@@ -10,9 +10,9 @@ DONE : Gérer le drop cascade quand on vire un pack |on ne gère que la suppress
 
 # Parseur
 
-- Gérer les cons avec les fichiers ISO !
+- Gérer les cons avec les fichiers ISO ! (DONE/2)
 - Revoir le logging pour faire ça proprement et remonter les merdes (en fait c'est ok mais ça reste un travail sur le niveau de débug)
-- trouver pourquoi certaines images ne remontent pas alors quelles sont présentes ...
+
 
 BONUX:
 après upload recompresser le pack et le déplacer dans un endroit téléchargeable
@@ -27,6 +27,7 @@ DONE : Tenter une tentative desespérée pour récupérer le nom du stepper parf
 DONE : Détecter les stepcharts sans steps et ne pas les inclures
 DONE : Calculer le breakdown (façon arrow vortex)
 DONE : correction diverses conneries
+DONE : trouver pourquoi certaines images ne remontent pas alors quelles sont présentes ... (commentaires dans simfile.py)
 -----
 
 # Web

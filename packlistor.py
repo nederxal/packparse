@@ -5,6 +5,7 @@ import os
 import sys
 import glob
 import logging
+from shutil import make_archive, rmtree
 from lark import Lark
 from lark.exceptions import UnexpectedCharacters
 from sqlalchemy import create_engine, exc
@@ -27,6 +28,8 @@ def main():
             except NoResultFound:
                 logger.debug("Extraction des songs du pack %s", pack.name)
                 song_extract(db, pack)
+            except AssertionError as e:
+                logger.info(e)
 
     db.close()
 
@@ -60,10 +63,23 @@ def song_extract(db, pack):
                             simfile_path, pack.name, e)
             return 1
 
-    if len(pack.songs) == 0:
-        logger.warning("Le pack %s semble ne pas avoir de songs", pack.name)
-    else:
+    assert (len(pack.songs) > 0), "Le pack %s est vide" % (pack.name)
+
+    try:
         db_insert(db, pack)
+    except Exception as e:
+        logger.info(e)
+        pass
+    else:
+        # Since pack is in database, compress and send it to another folder
+        logger.info("%s a été ajouté --> move to DL folder", pack.name)
+        src = os.path.join("pack", pack.name)
+        dest = os.path.join("weblistor", "static", "download", pack.name)
+        try:
+            make_archive(dest, 'zip', src)
+            rmtree(src)
+        except Exception as e:
+            logger.warning("un truc se passe mal : ", e)
 
 
 def db_insert(db, pack):

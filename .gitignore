@@ -4,6 +4,8 @@ pack/*
 !/pack/.gitkeep
 weblistor/static/images/*
 !/weblistor/static/images/default_banner.jpg
+weblistor/static/download/*
+!weblistor/static/download/.gitkeep
 weblistor.log
 packlistor.log
 env_packparse/*

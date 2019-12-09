@@ -7,8 +7,8 @@ Clique sur le titre pour aller directement dans le Pack qui contient la musique 
 </p>
 {% for song in song_list %}
 <div class="row">
-    <div class="column"><img src="/static/images/{{ song[5] }}" /></div>
-    <div class="column"> <a href={{ url_for('list_pack', id=song[1], _anchor=song[2]) }} ><h3>{{ song[2] }}</h3></a> </div>
+    <div class="column"><img src="{{ url_for('static', filename='images/'+song[5]) }}" /></div>
+    <div class="column"> <a href="{{ url_for('list_pack', id=song[1], _anchor=song[2]) }}" ><h3>{{ song[2] }}</h3></a> </div>
     {% if song[3] == song[4] %}
     <div class="column"> <h3>{{ song[3] }} <em>BPM</em></h3></div>
     {% else %}
