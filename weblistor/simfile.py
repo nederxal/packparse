@@ -10,25 +10,9 @@ from weblistor.tables import Pack, Stepper, Banners, Difficulties, Songs
 
 
 class SimFile(Visitor):
-    # format = "%(asctime)s : %(name)s : %(levelname)s : %(message)s"
-    # logger = logging.basicConfig(filename='packlistor2.log',
-    #                              format=format,
-    #                              level=logging.DEBUG)
-    # logger = logging.getLogger(__name__)
-
     def __init__(self, simfile_path, p, dbconn):
-        # specific for SongObject set with header
-        self.name = None
-        self.min_speed = None
-        self.max_speed = None
-        self.double = None
-        self.fk_banner = None
-        # specific for SongObject set with *-chart
-        self.difficulty_block = None
-        self.fk_difficulty_name = None
-        self.fk_stepper_name = None
-        self.breakdown = None
-        # specific for the simfile
+        # see tables.py for songs attributes
+        self.songs_attr = {}
         self.sm_path = simfile_path
         self.p = p
         self.dbconn = dbconn
@@ -38,39 +22,50 @@ class SimFile(Visitor):
         for data in tree.children:
             try:
                 if data.children[0] == "TITLE":
-                    self.name = str(data.children[1])
+                    self.songs_attr["name"] = str(data.children[1])
+
                 if data.children[0] == "SUBTITLE":
-                    self.name = ' - '.join([self.name, str(data.children[1])])
+                    self.songs_attr["name"] = ' - '.join(
+                        [self.songs_attr["name"], str(data.children[1])])
+
                 if data.children[0] == "BANNER":
                     self.get_banner_id(data.children[1])
+
                 if data.children[0] == "DISPLAYBPM":
-                    self.max_speed = re.sub(r"\.[0-9]*", "", data.children[1])
+                    self.songs_attr["max_speed"] = re.sub(
+                        r"\.[0-9]*", "", data.children[1])
+
                 if data.children[0] == "BPMS":
                     bpms = data.children[1]
+
             except IndexError:
                 pass
 
-        if not self.max_speed:
+        if "max_speed" not in self.songs_attr:
             bpms = re.sub("[0-9.]*=", "", bpms)
             bpms = re.sub(r"\.[0-9]*", "", bpms)
             t_line = bpms.split(",")
             t_line = list(map(int, t_line))
+
             if max(t_line) != min(t_line):
-                self.min_speed = min(t_line)
-                self.max_speed = max(t_line)
+                self.songs_attr["min_speed"] = min(t_line)
+                self.songs_attr["max_speed"] = max(t_line)
             else:
-                self.min_speed = max(t_line)
-                self.max_speed = max(t_line)
-        elif re.search(":", self.max_speed):
-            self.min_speed, self.max_speed = self.max_speed.split(":")
-        elif self.max_speed == "*":
+                self.songs_attr["min_speed"] = max(t_line)
+                self.songs_attr["max_speed"] = max(t_line)
+
+        elif re.search(":", self.songs_attr["max_speed"]):
+            (self.songs_attr["min_speed"],
+             self.songs_attr["max_speed"]) = (self.songs_attr["max_speed"].
+                                              split(":"))
+        elif self.songs_attr["max_speed"] == "*":
             # From : https://github.com/stepmania/stepmania/wiki/sm#displaybpm
             # If we can't set BPM set it to 0 :/
-            self.min_speed = self.max_speed = 0
+            self.songs_attr["min_speed"] = self.songs_attr["max_speed"] = 0
         else:
-            self.min_speed = self.max_speed
+            self.songs_attr["min_speed"] = self.songs_attr["max_speed"]
 
-        if not self.fk_banner:
+        if "fk_banner" not in self.songs_attr:
             self.get_banner_id("default_banner.png")
 
     def single_chart(self, tree):
@@ -82,25 +77,23 @@ class SimFile(Visitor):
             pass
         else:
             self.breakdown_calculation(chart_len)
-            # if 5 = name artist exist if 4 = name artist inexistent
+
             if len(tree.children) == 5:
                 self.stepper_name_cleaning(tree.children[0])
                 difficulty_name = Difficulties(tree.children[1])
-                self.difficulty_block = str(tree.children[2])
+                self.songs_attr["difficulty_block"] = str(tree.children[2])
             elif len(tree.children) == 4:
                 self.stepper_name_cleaning('')
                 difficulty_name = Difficulties(tree.children[0])
-                self.difficulty_block = tree.children[1]
+                self.songs_attr["difficulty_block"] = tree.children[1]
             else:
+                # if 5 = name artist exist if 4 = name artist inexistent
                 assert (4 <= len(tree.children) <= 5), \
-                    "ERROR sur les data : %s" % (self.sm_path)
+                    logging.error("ERROR sur les data : ", self.sm_path)
 
             self.db_get_fk(difficulty_name)
-            self.double = False
-            song = Songs(self.name, self.min_speed, self.max_speed,
-                         self.double, self.difficulty_block, self.breakdown,
-                         self.fk_stepper_name.id, self.fk_difficulty_name.id,
-                         self.fk_banner.id)
+            self.songs_attr["double"] = False
+            song = Songs(**self.songs_attr)
             self.add_to_pack(song)
 
     def double_chart(self, tree):
@@ -114,35 +107,35 @@ class SimFile(Visitor):
             if len(tree.children) == 5:
                 self.stepper_name_cleaning(tree.children[0])
                 difficulty_name = Difficulties(tree.children[1])
-                self.difficulty_block = str(tree.children[2])
+                self.songs_attr["difficulty_block"] = str(tree.children[2])
             elif len(tree.children) == 4:
                 self.stepper_name_cleaning('')
                 difficulty_name = Difficulties(tree.children[0])
-                self.difficulty_block = tree.children[1]
+                self.songs_attr["difficulty_block"] = tree.children[1]
             else:
                 assert (4 <= len(tree.children) <= 5), \
-                    "ERROR sur les data : %s" % (self.sm_path)
+                    logging.error("ERROR sur les data : ", self.sm_path)
 
             self.db_get_fk(difficulty_name)
-            self.double = True
-            song = Songs(self.name, self.min_speed, self.max_speed,
-                         self.double, self.difficulty_block, self.breakdown,
-                         self.fk_stepper_name.id, self.fk_difficulty_name.id,
-                         self.fk_banner.id)
+            self.songs_attr["double"] = True
+            song = Songs(**self.songs_attr)
             self.add_to_pack(song)
 
+    ##########
     # Operations on data to get something clean ...
+    ##########
+
+    # Sometimes the file defined in smfile has not the same extention
+    # than the real file
+    # Fun fact : If the file has not the same extension BUT has 'banner' in
+    # the name, stepmania found the banner.
+    # Also it seems if the extension is not good, stepmania can still find
+    # the banner ... (maybe related to previous fact)
     def get_banner_id(self, banner_path):
         set_path = os.path.join(os.getcwd(), "weblistor", "static", "images")
         banner_path = os.path.join(os.path.dirname(self.sm_path), banner_path)
         filename, ext = os.path.splitext(banner_path)
 
-        # Sometimes the file defined in smfile has not the same extention
-        # than the real file
-        # Fun facts. If the file has not the same extension BUT has
-        # 'banner' in the name, stepmania found the banner.
-        # Also it seems if the extension is not good stepmania can still find
-        # the banner ... (maybe related to previous fact)
         for extension in ["jpeg", "jpg", "png"]:
             try:
                 banner_path_ext = '.'.join([filename, extension])
@@ -154,14 +147,14 @@ class SimFile(Visitor):
                 self.db_get_fk(banner)
                 return None
             except FileNotFoundError as e:
-                # add logging here (debug)
+                logging.debug("le fichier n'existe pas : ", banner_path)
                 pass
             except SameFileError as e:
+                logging.debug("le fichier existe déjà : ", banner_path)
                 self.db_get_fk(banner)
                 return None
 
-        # add another logging here (warn)
-        # if we REALLY can't find ...
+        logging.warning("Impossible de trouver : ", banner_path)
         banner = Banners("default_banner.png")
         self.db_get_fk(banner)
 
@@ -180,30 +173,27 @@ class SimFile(Visitor):
                 stepper = Stepper(result[-1])
             else:
                 stepper = Stepper("UNAMED_STEPPER")
+
         else:
             stepper = Stepper(stepper_name)
 
         self.db_get_fk(stepper)
 
     def db_get_fk(self, data):
-        # If data exists we check for the id
         try:
             self.dbconn.add(data)
             self.dbconn.commit()
         except exc.IntegrityError as e:
+            logging.debug("La donnée existe déjà :", e)
             self.dbconn.rollback()
             pass
 
         if isinstance(data, Difficulties):
-            self.fk_difficulty_name = (self.dbconn.query(Difficulties).
-                                       filter(Difficulties.name == data.name).
-                                       one())
+            self.songs_attr["fk_difficulty_name"] = data.get_id()
         elif isinstance(data, Banners):
-            self.fk_banner = (self.dbconn.query(Banners).
-                              filter(Banners.name == data.name).one())
+            self.songs_attr["fk_banner"] = data.get_id()
         elif isinstance(data, Stepper):
-            self.fk_stepper_name = (self.dbconn.query(Stepper).
-                                    filter(Stepper.name == data.name).one())
+            self.songs_attr["fk_stepper_name"] = data.get_id()
         else:
             raise
             sys.exit(1)
@@ -256,12 +246,15 @@ class SimFile(Visitor):
 
         if stream > 0:
             final_bd.append(stream)
+
         try:
             if not str(final_bd[0]).isdigit():
                 final_bd.pop(0)
+
         except IndexError:
             pass
-        self.breakdown = ''.join(map(str, final_bd))
+
+        self.songs_attr["breakdown"] = ''.join(map(str, final_bd))
 
     def add_to_pack(self, song):
         self.p.songs.append(song)

@@ -1,22 +1,26 @@
-# License ?
-WTFPL ? tant que y'a pas de pognon fait dessus ...
+# License
+Unlicensed
 
 # Base
 - Index ?
-
-DONE : Gérer le drop cascade quand on vire un pack |on ne gère que la suppressions de songs, les steppers et banners peuvent être réutilisés
+Gérer l'auto populate ...
+INSERT INTO difficulties (name)
+VALUES ("Beginner"), ("Easy"), ("Medium"), ("Hard"), ("Challenge"), ("Edit")
 
 -----
 
 # Parseur
 
-- Gérer les cons avec les fichiers ISO ! (DONE/2)
+- Gérer les cons avec les fichiers que l'on ne peut pas ouvrir en UTF-8 ! (DONE/2)
 - Revoir le logging pour faire ça proprement et remonter les merdes (en fait c'est ok mais ça reste un travail sur le niveau de débug)
 
+-----
 
-BONUX:
-après upload recompresser le pack et le déplacer dans un endroit téléchargeable
+# Web
 
+------
+DONE : Gérer le drop cascade quand on vire un pack |on ne gère que la suppressions de songs, les steppers et banners peuvent être réutilisés
+DONE :après upload recompresser le pack et le déplacer dans un endroit téléchargeable
 DONE : Gérer les cas de merde avec des tabs en trop .... -- Fait avec d'autres cas merdiques en plus ... 
 DONE : ajouter subtitle si il existe pour les cas de songs découpée (i.e : enjoy the flight)
 DONE : Remplacer startswith par re.match("^(\ \t)*#TOTO", line) un truc dans le genre
@@ -28,17 +32,11 @@ DONE : Détecter les stepcharts sans steps et ne pas les inclures
 DONE : Calculer le breakdown (façon arrow vortex)
 DONE : correction diverses conneries
 DONE : trouver pourquoi certaines images ne remontent pas alors quelles sont présentes ... (commentaires dans simfile.py)
------
-
-# Web
 DONE : Mieux gérer la recherche (pas uniquement startswith)
 DONE : Ajouter la recherche par songs (avec paramètre speed / stepartiste / diff block / diff name)
 DONE : Ranger les requètes de recherches avec les Objets de base (table.view) pour plus de cohérence
 DONE : CSS avec milligram
-
-Bonux:
-Ajout de stats (total de musiques range bpm / range diff)
-
+DONE : Ajout de stats (total de musiques range bpm / range diff)
 
 ------
 

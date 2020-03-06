@@ -48,6 +48,10 @@ class Stepper(db.Model):
     def __init__(self, name):
         self.name = name
 
+    def get_id(self):
+        r = Stepper.query.filter(Stepper.name == self.name).one()
+        return r.id
+
 
 class Banners(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -56,6 +60,10 @@ class Banners(db.Model):
     def __init__(self, name):
         self.name = name
 
+    def get_id(self):
+        r = Banners.query.filter(Banners.name == self.name).one()
+        return r.id
+
 
 class Difficulties(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -63,9 +71,10 @@ class Difficulties(db.Model):
 
     def __init__(self, name):
         self.name = name
-# Gérer l'auto populate ...
-# INSERT INTO difficulties (name)
-# VALUES ("Beginner"), ("Easy"), ("Medium"), ("Hard"), ("Challenge"), ("Edit")
+
+    def get_id(self):
+        r = Difficulties.query.filter(Difficulties.name == self.name).one()
+        return r.id
 
 
 class Songs(db.Model):
