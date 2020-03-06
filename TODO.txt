@@ -12,15 +12,16 @@ VALUES ("Beginner"), ("Easy"), ("Medium"), ("Hard"), ("Challenge"), ("Edit")
 # Parseur
 
 - Gérer les cons avec les fichiers que l'on ne peut pas ouvrir en UTF-8 ! (DONE/2)
-- Revoir le logging pour faire ça proprement et remonter les merdes (en fait c'est ok mais ça reste un travail sur le niveau de débug)
-
+- revoir si on retire toutes les infos dans l'info où y'a le stepartiste
+- revoir calcul breakdown (faut le dire c'est moche)
 -----
 
 # Web
 
 ------
+DONE : Revoir le logging pour faire ça proprement et remonter les merdes (en fait c'est ok mais ça reste un travail sur le niveau de débug)
 DONE : Gérer le drop cascade quand on vire un pack |on ne gère que la suppressions de songs, les steppers et banners peuvent être réutilisés
-DONE :après upload recompresser le pack et le déplacer dans un endroit téléchargeable
+DONE : après upload recompresser le pack et le déplacer dans un endroit téléchargeable
 DONE : Gérer les cas de merde avec des tabs en trop .... -- Fait avec d'autres cas merdiques en plus ... 
 DONE : ajouter subtitle si il existe pour les cas de songs découpée (i.e : enjoy the flight)
 DONE : Remplacer startswith par re.match("^(\ \t)*#TOTO", line) un truc dans le genre

@@ -89,7 +89,7 @@ class SimFile(Visitor):
             else:
                 # if 5 = name artist exist if 4 = name artist inexistent
                 assert (4 <= len(tree.children) <= 5), \
-                    logging.error("ERROR sur les data : ", self.sm_path)
+                    logging.error("ERROR sur les data : %s", self.sm_path)
 
             self.db_get_fk(difficulty_name)
             self.songs_attr["double"] = False
@@ -114,12 +114,15 @@ class SimFile(Visitor):
                 self.songs_attr["difficulty_block"] = tree.children[1]
             else:
                 assert (4 <= len(tree.children) <= 5), \
-                    logging.error("ERROR sur les data : ", self.sm_path)
+                    logging.error("ERROR sur les data : %s", self.sm_path)
 
             self.db_get_fk(difficulty_name)
             self.songs_attr["double"] = True
             song = Songs(**self.songs_attr)
             self.add_to_pack(song)
+
+    def couple_chart(self, tree):
+        self.double_chart(tree)
 
     ##########
     # Operations on data to get something clean ...
@@ -147,14 +150,14 @@ class SimFile(Visitor):
                 self.db_get_fk(banner)
                 return None
             except FileNotFoundError as e:
-                logging.debug("le fichier n'existe pas : ", banner_path)
+                logging.debug("le fichier n'existe pas : %s", banner_path)
                 pass
             except SameFileError as e:
-                logging.debug("le fichier existe déjà : ", banner_path)
+                logging.debug("le fichier existe déjà : %s", banner_path)
                 self.db_get_fk(banner)
                 return None
 
-        logging.warning("Impossible de trouver : ", banner_path)
+        logging.warning("Impossible de trouver : %s", banner_path)
         banner = Banners("default_banner.png")
         self.db_get_fk(banner)
 
@@ -184,7 +187,7 @@ class SimFile(Visitor):
             self.dbconn.add(data)
             self.dbconn.commit()
         except exc.IntegrityError as e:
-            logging.debug("La donnée existe déjà :", e)
+            logging.debug("La donnée existe déjà : %s", e)
             self.dbconn.rollback()
             pass
 

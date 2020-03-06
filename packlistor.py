@@ -70,10 +70,6 @@ def song_extract(db, pack):
         except AssertionError as e:
             logging.critical("%s du pack à un problème : %s", simfile_path, e)
             return 1
-        # except Exception as e:
-        #     logging.critical("%s du pack %s pose problème : %s",
-        #                      simfile_path, pack.name, e)
-        #     return 1
 
     assert (len(pack.songs) > 0), "Le pack %s est vide" % (pack.name)
 
