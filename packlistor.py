@@ -1,18 +1,19 @@
-#! /usr/bin/python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 import os
 import sys
-import glob
 import logging
+from codecs import BOM_UTF8
+from pathlib import Path
 from shutil import make_archive, rmtree
 from lark import Lark
-from lark.exceptions import UnexpectedCharacters
-from sqlalchemy import create_engine, exc
-from sqlalchemy.orm import sessionmaker
+from lark.exceptions import UnexpectedInput
+from sqlalchemy import exc
 from sqlalchemy.orm.exc import NoResultFound
+from weblistor import app, db
 from weblistor.tables import Pack
-from weblistor.simfile import SimFile
+from weblistor.simfile import SimFile, SscFile
 
 
 def setup_logs():
@@ -48,33 +49,58 @@ def setup_logs():
     logging.debug = overrideLog(logging.debug, _BLUE)
 
 
-def song_extract(db, pack):
-    smpath = os.path.join("pack", pack.name, "*/*.sm")
-    lark_parser = Lark(open('simfile.lark', 'r').read(), parser="lalr")
+def read_simfile(path):
+    raw = Path(path).read_bytes()
+    try:
+        text = raw.decode("utf-8-sig")
+    except UnicodeDecodeError:
+        if raw.startswith(BOM_UTF8):
+            raise
+        text = raw.decode("cp1252")
+        logging.warning("%s : lu en Windows-1252 (UTF-8 invalide)", path)
+    return text.replace("\r\n", "\n").replace("\r", "\n")
 
-    for simfile_path in glob.glob(smpath):
+
+def song_extract(db, pack):
+    formats = {".sm": ("simfile.lark", SimFile),
+               ".ssc": ("simfile_ssc.lark", SscFile)}
+    parsers = {}
+    paths = sorted(Path("pack", pack.name).glob("*/*"))
+    ssc_stems = {path.with_suffix("") for path in paths
+                 if path.suffix.lower() == ".ssc" and path.is_file()}
+
+    for simfile_path in paths:
+        suffix = simfile_path.suffix.lower()
+        if suffix not in formats or not simfile_path.is_file():
+            continue
+        if suffix == ".sm" and simfile_path.with_suffix("") in ssc_stems:
+            continue
+        grammar, visitor = formats[suffix]
+        if suffix not in parsers:
+            parsers[suffix] = Lark(Path(__file__).with_name(grammar).read_text(encoding="utf-8"),
+                                   parser="lalr", maybe_placeholders=False)
         logging.debug("Parse : %s", simfile_path)
         try:
-            simfile = open(simfile_path, 'r', encoding='utf-8-sig').read()
-            simfile_tree = lark_parser.parse(simfile)
-            SimFileResult = SimFile(simfile_path, pack, db)
-            SimFileResult.visit(simfile_tree)
-        except UnexpectedCharacters as e:
+            simfile = read_simfile(simfile_path)
+            simfile_tree = parsers[suffix].parse(simfile)
+            # Chart callbacks depend on metadata from the header.
+            visitor(simfile_path, pack, db).visit_topdown(simfile_tree)
+        except UnexpectedInput as e:
             logging.critical("%s du pack %s a une règle inconnue :\n %s",
                              simfile_path, pack.name, e)
             return 1
         except UnicodeDecodeError as e:
-            logging.critical("%s du pack %s n'est pas UTF-8 ou ASCII",
-                             simfile_path, pack.name)
+            logging.critical("%s du pack %s : encodage invalide : %s",
+                             simfile_path, pack.name, e)
             return 1
-        except AssertionError as e:
+        except (AssertionError, ValueError) as e:
             logging.critical("%s du pack à un problème : %s", simfile_path, e)
             return 1
 
     assert (len(pack.songs) > 0), "Le pack %s est vide" % (pack.name)
 
-    db_insert(db, pack)
-    move_pack(pack)
+    if db_insert(db, pack) != 1:
+        move_pack(pack)
 
 
 def db_insert(db, pack):
@@ -122,22 +148,17 @@ def move_pack(pack):
 def main():
     setup_logs()
 
-    engine = create_engine('sqlite:///songs2.db')
-    session = sessionmaker(bind=engine)
-    db = session()
-
-    for pack_name in os.scandir("pack/"):
-        if pack_name.is_dir(follow_symlinks=False):
-            pack = Pack(pack_name.name)
-            try:
-                db.query(Pack).filter(Pack.name == pack.name).one()
-            except NoResultFound:
-                logging.debug("Extraction des songs du pack %s", pack.name)
-                song_extract(db, pack)
-            except AssertionError as e:
-                logging.info(e)
-
-    db.close()
+    with app.app_context():
+        for pack_name in os.scandir("pack/"):
+            if pack_name.is_dir(follow_symlinks=False):
+                pack = Pack(pack_name.name)
+                try:
+                    db.session.query(Pack).filter(Pack.name == pack.name).one()
+                except NoResultFound:
+                    logging.debug("Extraction des songs du pack %s", pack.name)
+                    song_extract(db.session, pack)
+                except AssertionError as e:
+                    logging.info(e)
 
     return 0
 

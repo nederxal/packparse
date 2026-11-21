@@ -1,0 +1,12 @@
+%import common.WS
+%ignore WS
+%ignore /\/\/[^\r\n]*/
+
+start: ssc_header ssc_chart*
+ssc_header: tag+
+ssc_chart: _NOTEDATA ":" ";" tag+
+
+tag: "#" NAME ":" VALUE? ";"
+_NOTEDATA.2: /#NOTEDATA(?=\s*:)/i
+NAME: /[a-zA-Z][a-zA-Z0-9_]*/
+VALUE: /(?:\\[;:\\]|\\(?![;:\\])|[^;\\])+/

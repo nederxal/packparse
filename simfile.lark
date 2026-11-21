@@ -24,14 +24,14 @@ key: "#" WORD ":" VALUE* ";"+
 
 // Notecharts
 single_line: /[01234MF]{4}/
-single_measure: single_line+ ","*
-single_final_measure: single_line* ","* ";"
+single_measure: single_line+ ","
+single_final_measure: single_line* ";"
 single_notes: single_measure* single_final_measure
 single_chart: "#NOTES:" "dance-single:" (CHART_VALUE* ":")~4 single_notes*
 
 double_line: /[01234MF]{8}/
-double_measure: double_line+ ","*
-double_final_measure: double_line* ","* ";"
+double_measure: double_line+ ","
+double_final_measure: double_line* ";"
 double_notes: double_measure* double_final_measure
 double_chart: "#NOTES:" "dance-double:" (CHART_VALUE* ":")~4 double_notes*
 couple_chart: "#NOTES:" "dance-couple:" (CHART_VALUE* ":")~4 double_notes*

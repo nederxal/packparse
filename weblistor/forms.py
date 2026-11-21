@@ -3,7 +3,7 @@
 
 from flask import flash
 from flask_wtf import FlaskForm
-from wtforms import TextField, IntegerField, BooleanField, SelectField
+from wtforms import StringField, IntegerField, BooleanField, SelectField
 from wtforms.validators import InputRequired, Optional, NumberRange
 from wtforms.validators import DataRequired, Length
 
@@ -16,15 +16,15 @@ def flash_errors(form):
 
 
 class SearchPack(FlaskForm):
-    pack_name = TextField("Pack name :",
-                          [InputRequired(),
-                           Length(min=3,
-                                  message="Au moins 3 lettres fé pa tapute")])
+    pack_name = StringField("Pack name :",
+                            [InputRequired(),
+                             Length(min=3,
+                                    message="Au moins 3 lettres fé pa tapute")])
 
 
 class SearchSong(FlaskForm):
-    song_name = TextField("Song name")
-    stepper = TextField("Step artist")
+    song_name = StringField("Song name")
+    stepper = StringField("Step artist")
     speed_low = IntegerField("Min BPM")
     speed_high = IntegerField("Max BPM")
     double = BooleanField("Double ?")
