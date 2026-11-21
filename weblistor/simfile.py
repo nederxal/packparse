@@ -6,6 +6,7 @@ from lark import Visitor
 from shutil import copy, SameFileError
 from hashlib import sha256
 from sqlalchemy import exc
+from weblistor.breakdown import stream_breakdown
 from weblistor.tables import Pack, Stepper, Banners, Difficulties, Songs
 
 
@@ -17,112 +18,64 @@ class SimFile(Visitor):
         self.p = p
         self.dbconn = dbconn
 
-    # Lark rules
     def header(self, tree):
-        for data in tree.children:
-            try:
-                if data.children[0] == "TITLE":
-                    self.songs_attr["name"] = str(data.children[1])
+        tags = {str(key): str(value) for key, value in
+                (tag.children for tag in tree.children if len(tag.children) == 2)}
+        self.set_header(tags)
+        self.set_bpm(*self.bpm_range(tags))
 
-                if data.children[0] == "SUBTITLE":
-                    self.songs_attr["name"] = ' - '.join(
-                        [self.songs_attr["name"], str(data.children[1])])
+    def set_header(self, tags):
+        title = tags.get("TITLE")
+        if not title:
+            raise ValueError("TITLE manquant")
+        subtitle = tags.get("SUBTITLE")
+        self.songs_attr["name"] = f"{title} - {subtitle}" if subtitle else title
+        self.get_banner_id(tags.get("BANNER") or "default_banner.png")
 
-                if data.children[0] == "BANNER":
-                    self.get_banner_id(data.children[1])
+    @staticmethod
+    def bpm_range(tags):
+        display = tags.get("DISPLAYBPM")
+        if display == "*":
+            return 0, 0
+        if display:
+            speeds = [int(float(value)) for value in display.split(":")]
+            return speeds[0], speeds[-1]
 
-                if data.children[0] == "DISPLAYBPM":
-                    self.songs_attr["max_speed"] = re.sub(
-                        r"\.[0-9]*", "", data.children[1])
+        speeds = [int(float(change.partition("=")[2]))
+                  for change in tags.get("BPMS", "").split(",") if change.strip()]
+        if not speeds:
+            raise ValueError("BPMS manquant")
+        return min(speeds), max(speeds)
 
-                if data.children[0] == "BPMS":
-                    bpms = data.children[1]
-
-            except IndexError:
-                pass
-
-        if "max_speed" not in self.songs_attr:
-            bpms = re.sub("[0-9.]*=", "", bpms)
-            bpms = re.sub(r"\.[0-9]*", "", bpms)
-            t_line = bpms.split(",")
-            t_line = list(map(int, t_line))
-
-            if max(t_line) != min(t_line):
-                self.songs_attr["min_speed"] = min(t_line)
-                self.songs_attr["max_speed"] = max(t_line)
-            else:
-                self.songs_attr["min_speed"] = max(t_line)
-                self.songs_attr["max_speed"] = max(t_line)
-
-        elif re.search(":", self.songs_attr["max_speed"]):
-            (self.songs_attr["min_speed"],
-             self.songs_attr["max_speed"]) = (self.songs_attr["max_speed"].
-                                              split(":"))
-        elif self.songs_attr["max_speed"] == "*":
-            # From : https://github.com/stepmania/stepmania/wiki/sm#displaybpm
-            # If we can't set BPM set it to 0 :/
-            self.songs_attr["min_speed"] = self.songs_attr["max_speed"] = 0
-        else:
-            self.songs_attr["min_speed"] = self.songs_attr["max_speed"]
-
-        if "fk_banner" not in self.songs_attr:
-            self.get_banner_id("default_banner.png")
+    def set_bpm(self, min_speed, max_speed):
+        self.songs_attr.update(min_speed=min_speed, max_speed=max_speed)
 
     def single_chart(self, tree):
-        # Maybe stepchart is empty ... we won't add it
-        # Empty chart count at least 1 measure
-        chart_len = tree.children[-1]
-
-        if len(chart_len.children) <= 1:
-            pass
-        else:
-            self.breakdown_calculation(chart_len)
-
-            if len(tree.children) == 5:
-                self.stepper_name_cleaning(tree.children[0])
-                difficulty_name = Difficulties(tree.children[1])
-                self.songs_attr["difficulty_block"] = str(tree.children[2])
-            elif len(tree.children) == 4:
-                self.stepper_name_cleaning('')
-                difficulty_name = Difficulties(tree.children[0])
-                self.songs_attr["difficulty_block"] = tree.children[1]
-            else:
-                # if 5 = name artist exist if 4 = name artist inexistent
-                assert (4 <= len(tree.children) <= 5), \
-                    logging.error("ERROR sur les data : %s", self.sm_path)
-
-            self.db_get_fk(difficulty_name)
-            self.songs_attr["double"] = False
-            song = Songs(**self.songs_attr)
-            self.add_to_pack(song)
+        self.sm_chart(tree, double=False)
 
     def double_chart(self, tree):
-        chart_len = tree.children[-1]
+        self.sm_chart(tree, double=True)
 
-        if len(chart_len.children) <= 1:
-            pass
-        else:
-            self.breakdown_calculation(chart_len)
-
-            if len(tree.children) == 5:
-                self.stepper_name_cleaning(tree.children[0])
-                difficulty_name = Difficulties(tree.children[1])
-                self.songs_attr["difficulty_block"] = str(tree.children[2])
-            elif len(tree.children) == 4:
-                self.stepper_name_cleaning('')
-                difficulty_name = Difficulties(tree.children[0])
-                self.songs_attr["difficulty_block"] = tree.children[1]
-            else:
-                assert (4 <= len(tree.children) <= 5), \
-                    logging.error("ERROR sur les data : %s", self.sm_path)
-
-            self.db_get_fk(difficulty_name)
-            self.songs_attr["double"] = True
-            song = Songs(**self.songs_attr)
-            self.add_to_pack(song)
+    def sm_chart(self, tree, double):
+        *metadata, notes = tree.children
+        measures = [[row.children[0] for row in measure.children]
+                    for measure in notes.children]
+        if len(measures) <= 1:
+            return
+        if len(metadata) == 3:
+            metadata.insert(0, "")
+        author, difficulty, meter, _radar = metadata
+        self.store_chart(measures, author, difficulty, meter, double)
 
     def couple_chart(self, tree):
         self.double_chart(tree)
+
+    def store_chart(self, measures, author, difficulty, meter, double):
+        self.songs_attr["breakdown"] = stream_breakdown(measures)
+        self.stepper_name_cleaning(author)
+        self.db_get_fk(Difficulties(str(difficulty)))
+        self.songs_attr.update(difficulty_block=int(meter), double=double)
+        self.add_to_pack(Songs(**self.songs_attr))
 
     ##########
     # Operations on data to get something clean ...
@@ -201,63 +154,44 @@ class SimFile(Visitor):
             raise
             sys.exit(1)
 
-    # Too lazy to do something clean and accurate ...
-    def breakdown_calculation(self, chart_len):
-        pause = 0
-        stream = 0
-        final_bd = []
-
-        for m in chart_len.children:
-            if len(m.children) <= 8:
-                if stream >= 1:
-                    final_bd.append(stream)
-                    stream = 0
-                    pause += 1
-                else:
-                    pause += 1
-            else:
-                s = 0
-                for steps in m.children:
-                    if any(x in steps.children[0] for x in ["1", "2", "4"]):
-                        s += 1
-
-                # Don't forget range : [a, b[
-                if s == len(m.children):
-                    if pause == 1:
-                        final_bd.append("'")
-                        pause = 0
-                        stream += 1
-                    elif pause in range(2, 5):
-                        final_bd.append("-")
-                        pause = 0
-                        stream += 1
-                    elif pause in range(5, 16):
-                        final_bd.append('/')
-                        pause = 0
-                        stream += 1
-                    elif pause >= 16:
-                        final_bd.append('|')
-                        pause = 0
-                        stream += 1
-                    else:
-                        stream += 1
-                else:
-                    if stream > 0:
-                        final_bd.append(stream)
-                    stream = 0
-                    pause += 1
-
-        if stream > 0:
-            final_bd.append(stream)
-
-        try:
-            if not str(final_bd[0]).isdigit():
-                final_bd.pop(0)
-
-        except IndexError:
-            pass
-
-        self.songs_attr["breakdown"] = ''.join(map(str, final_bd))
-
     def add_to_pack(self, song):
         self.p.songs.append(song)
+
+
+class SscFile(SimFile):
+    @staticmethod
+    def tags(tree):
+        tags = {}
+        for tag in tree.children:
+            name, *value = tag.children
+            tags[name.upper()] = re.sub(r"\\([;:\\])", r"\1", value[0]).strip() if value else ""
+        return tags
+
+    def ssc_header(self, tree):
+        self.header_tags = self.tags(tree)
+        self.set_header(self.header_tags)
+
+    def ssc_chart(self, tree):
+        tags = self.tags(tree)
+        style = tags.get("STEPSTYPE", "").lower()
+        if style not in ("dance-single", "dance-double"):
+            return
+
+        notes = tags.get("NOTES") or tags.get("NOTES2", "")
+        notes = re.sub(r"//[^\n]*", "", notes)
+        notes = re.sub(r"\[[^\]\n]*\]", "", notes)  # Keysound indices.
+        measures = [measure.split() for measure in notes.split(",") if measure.strip()]
+        if not any(row.strip("0") for measure in measures for row in measure):
+            return
+
+        double = style == "dance-double"
+        row_width = 8 if double else 4
+        if any(len(row) != row_width or not re.fullmatch(r"[01234MLFK]+", row)
+               for measure in measures for row in measure):
+            raise ValueError(f"notes invalides pour {style}")
+
+        timing = tags if tags.get("DISPLAYBPM") or tags.get("BPMS") else self.header_tags
+        self.set_bpm(*self.bpm_range(timing))
+        author = tags.get("CREDIT") or self.header_tags.get("CREDIT", "")
+        self.store_chart(measures, author, tags.get("DIFFICULTY", ""),
+                         tags.get("METER", ""), double)
